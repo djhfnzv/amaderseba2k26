@@ -55,7 +55,8 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
     redirect("/login");
   }
 
-  redirect(ROLE_HOME[role]);
+  // New patients start the optional profile setup (requirements flow 5.1).
+  redirect(role === "patient" ? "/patient/profile?welcome=1" : ROLE_HOME[role]);
 }
 
 // -----------------------------------------------------------------------------

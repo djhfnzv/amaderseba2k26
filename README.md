@@ -29,7 +29,8 @@ with your email in the SQL editor. Log out and back in.
 | Branch | Scope | Status |
 |---|---|---|
 | `feature/landing-page` | Project scaffold + public landing page | ✅ merged |
-| `feature/m1-auth` | M1 Authentication & Role Management | ✅ |
+| `feature/m1-auth` | M1 Authentication & Role Management | ✅ merged |
+| `feature/m2-patient-profile` | M2 Patient Profile & Medical Records | ✅ |
 
 ## M1 — Authentication & roles
 
@@ -42,6 +43,19 @@ with your email in the SQL editor. Log out and back in.
   `src/proxy.ts` does fast checks from the session; each area's layout re-checks the database
   (`requireRole()` in `src/lib/auth/guards.ts`); Row Level Security protects the data.
 - Users can't change their own role or status. Suspended users are sent to `/suspended`.
+
+## M2 — Patient profile & medical records
+
+- **Health profile** (`/patient/profile`): date of birth (age is calculated), sex, weight,
+  height, blood group, allergies, chronic conditions, emergency contact.
+- **Medical records** (`/patient/records`): upload PDF/JPG/PNG up to 10 MB, with title, type,
+  report date and notes. Open, download, delete.
+- **After sign-up**, patients get an optional 2-step setup (profile → reports), then the dashboard.
+- **Storage:** private bucket `medical-files`, one folder per patient. The server issues a
+  one-time upload URL, the browser uploads directly, and the server checks the stored file's real
+  type and size before saving it. Files are opened through links that expire after 60 seconds.
+- **Access:** patients see only their own data (RLS on tables and storage). Doctor access for
+  booked patients comes with M7; access logging with M14.
 
 ## Project layout
 
