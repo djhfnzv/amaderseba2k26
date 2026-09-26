@@ -3,8 +3,9 @@ export const site = {
   tagline: "Verified doctors, online & in person",
   description:
     "Find verified doctors, book in-person or online appointments, consult over video and receive signed digital prescriptions.",
-  /** Login / sign-up page (built in M1). */
   loginHref: "/login",
+  signupHref: "/signup",
+  doctorSignupHref: "/signup?as=doctor",
 };
 
 export const navLinks = [
