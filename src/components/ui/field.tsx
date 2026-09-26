@@ -1,6 +1,6 @@
-import type { InputHTMLAttributes } from "react";
+import type { ComponentProps } from "react";
 
-type FieldProps = InputHTMLAttributes<HTMLInputElement> & {
+type FieldProps = ComponentProps<"input"> & {
   label: string;
   name: string;
   errors?: string[];
