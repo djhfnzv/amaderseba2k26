@@ -30,7 +30,7 @@ export function Hero() {
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
-              href={site.loginHref}
+              href={site.signupHref}
               className="inline-flex h-12 items-center justify-center rounded-lg bg-teal-700 px-6 font-semibold text-white shadow-sm transition-colors hover:bg-teal-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
             >
               Get started

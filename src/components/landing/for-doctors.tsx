@@ -26,7 +26,7 @@ export function ForDoctors() {
               Build your verified e-portfolio, reach more patients and run your practice online.
             </p>
             <Link
-              href={site.loginHref}
+              href={site.doctorSignupHref}
               className="mt-8 inline-flex h-12 items-center justify-center rounded-lg bg-white px-6 font-semibold text-teal-800 transition-colors hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
               Join as a doctor
