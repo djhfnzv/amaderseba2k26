@@ -246,8 +246,18 @@ export type AppointmentStatus =
   | "cancelled"
   | "expired"
   | "no_show";
-export type PaymentStatus = "unpaid" | "paid" | "refunded" | "waived";
-export type AppointmentAction = "booked" | "cancelled" | "rescheduled" | "started" | "completed" | "no_show";
+export type PaymentStatus = "unpaid" | "paid" | "refunded" | "partially_refunded" | "waived";
+export type PaymentMethod = "online" | "at_chamber";
+export type AppointmentAction =
+  | "booked"
+  | "cancelled"
+  | "rescheduled"
+  | "started"
+  | "completed"
+  | "no_show"
+  | "payment_received"
+  | "expired"
+  | "refunded";
 
 type AppointmentRow = {
   id: string;
@@ -260,6 +270,8 @@ type AppointmentRow = {
   status: AppointmentStatus;
   fee: number | null;
   payment_status: PaymentStatus;
+  payment_method: PaymentMethod;
+  payment_due_at: string | null;
   patient_note: string | null;
   cancelled_by: string | null;
   cancel_reason: string | null;
@@ -298,6 +310,70 @@ type AdminActionRow = {
   details: { role?: Role; cancelled_appointments?: number };
   created_at: string;
 };
+
+export type PaymentProvider = "sslcommerz" | "mock";
+export type PaymentRowStatus = "initiated" | "paid" | "failed" | "cancelled" | "expired";
+export type RefundStatus = "pending" | "processing" | "succeeded" | "failed";
+
+type PlatformSettingsRow = {
+  id: number;
+  commission_percent: number;
+  refund_full_hours: number;
+  refund_partial_percent: number;
+  payment_window_minutes: number;
+  currency: string;
+  updated_by: string | null;
+  updated_at: string;
+};
+
+type PaymentRow = {
+  id: string;
+  appointment_id: string;
+  patient_id: string;
+  doctor_id: string;
+  provider: PaymentProvider;
+  tran_id: string;
+  amount: number;
+  currency: string;
+  status: PaymentRowStatus;
+  val_id: string | null;
+  bank_tran_id: string | null;
+  card_type: string | null;
+  commission_amount: number | null;
+  doctor_amount: number | null;
+  gateway_data: Record<string, unknown>;
+  paid_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type RefundRow = {
+  id: string;
+  payment_id: string;
+  appointment_id: string;
+  amount: number;
+  reason: string | null;
+  status: RefundStatus;
+  provider_ref: string | null;
+  error: string | null;
+  attempts: number;
+  created_at: string;
+  updated_at: string;
+};
+
+type PayoutRow = {
+  id: string;
+  doctor_id: string;
+  amount: number;
+  method: "bank" | "bkash" | "nagad" | "cash" | "other";
+  reference: string | null;
+  note: string | null;
+  paid_at: string;
+  created_by: string | null;
+  created_at: string;
+};
+
+type RefundTicket = { refund_id: string; amount: number; bank_tran_id: string | null; provider: PaymentProvider; tran_id: string };
 
 export type Database = {
   public: {
@@ -389,6 +465,15 @@ export type Database = {
       slot_holds: { Row: SlotHoldRow; Insert: never; Update: never; Relationships: [] };
       appointment_events: { Row: AppointmentEventRow; Insert: never; Update: never; Relationships: [] };
       admin_actions: { Row: AdminActionRow; Insert: never; Update: never; Relationships: [] };
+      platform_settings: {
+        Row: PlatformSettingsRow;
+        Insert: never;
+        Update: Partial<Pick<PlatformSettingsRow, "commission_percent" | "refund_full_hours" | "refund_partial_percent" | "payment_window_minutes" | "updated_by">>;
+        Relationships: [];
+      };
+      payments: { Row: PaymentRow; Insert: never; Update: never; Relationships: [] };
+      refunds: { Row: RefundRow; Insert: never; Update: never; Relationships: [] };
+      payouts: { Row: PayoutRow; Insert: never; Update: never; Relationships: [] };
       verification_events: {
         Row: VerificationEventRow;
         Insert: never;
@@ -409,13 +494,42 @@ export type Database = {
       };
       hold_slot: { Args: { p_doctor: string; p_slot_start: string; p_type: ConsultationType }; Returns: string };
       release_hold: { Args: { p_hold: string }; Returns: undefined };
-      confirm_booking: { Args: { p_hold: string; p_note?: string | null }; Returns: string };
+      confirm_booking: { Args: { p_hold: string; p_note?: string | null; p_pay_at_chamber?: boolean }; Returns: string };
+      expire_stale_payments: { Args: { p_doctor?: string | null }; Returns: number };
+      begin_payment: {
+        Args: { p_appointment: string; p_provider: PaymentProvider };
+        Returns: { payment_id: string; tran_id: string; amount: number; currency: string; due_at: string | null }[];
+      };
+      complete_payment: {
+        Args: {
+          p_tran_id: string;
+          p_val_id: string;
+          p_bank_tran_id: string | null;
+          p_amount: number;
+          p_card_type: string | null;
+          p_data?: Record<string, unknown>;
+        };
+        Returns: { appointment_id: string; needs_refund: boolean }[];
+      };
+      fail_payment: { Args: { p_tran_id: string; p_status: "failed" | "cancelled"; p_data?: Record<string, unknown> }; Returns: string | null };
+      create_refund_for: { Args: { p_appointment: string }; Returns: RefundTicket[] };
+      retry_refund: { Args: { p_refund: string }; Returns: RefundTicket[] };
+      finish_refund: { Args: { p_refund: string; p_success: boolean; p_ref: string | null; p_error: string | null }; Returns: undefined };
+      doctor_earnings: {
+        Args: { p_doctor: string };
+        Returns: { gross: number; commission: number; refunded: number; net: number; paid_out: number; balance: number }[];
+      };
+      admin_record_payout: {
+        Args: { p_doctor: string; p_amount: number; p_method: PayoutRow["method"]; p_reference?: string | null; p_note?: string | null };
+        Returns: string;
+      };
       cancel_appointment: { Args: { p_id: string; p_reason?: string | null }; Returns: undefined };
       reschedule_appointment: { Args: { p_id: string; p_new_start: string }; Returns: undefined };
       update_appointment_status: {
         Args: { p_id: string; p_action: "start" | "complete" | "no_show" };
         Returns: undefined;
       };
+      copy_availability_day: { Args: { p_from: number; p_to: number[] }; Returns: number };
       get_available_slots: {
         Args: { p_doctor: string; p_from?: string | null; p_days?: number; p_type?: ConsultationType | null };
         Returns: AvailableSlot[];
@@ -473,3 +587,7 @@ export type Appointment = AppointmentRow;
 export type SlotHold = SlotHoldRow;
 export type AppointmentEvent = AppointmentEventRow;
 export type AdminAction = AdminActionRow;
+export type PlatformSettings = PlatformSettingsRow;
+export type Payment = PaymentRow;
+export type Refund = RefundRow;
+export type Payout = PayoutRow;

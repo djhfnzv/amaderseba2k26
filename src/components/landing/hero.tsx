@@ -15,7 +15,7 @@ export function Hero() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-teal-50 via-white to-white">
       <div className="page-container grid items-center gap-12 py-16 sm:py-20 lg:grid-cols-2 lg:py-24 2xl:gap-20">
-        <div>
+        <div className="animate-fade-up">
           <p className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-white px-3 py-1 text-xs font-medium text-teal-800">
             <ShieldCheckIcon className="size-4" />
             Every doctor is license-verified
@@ -68,7 +68,7 @@ export function Hero() {
 function DoctorPreviewCard() {
   const slots = ["10:00", "10:20", "11:00", "11:40"];
   return (
-    <div className="relative mx-auto w-full max-w-md lg:mr-0 xl:max-w-lg" aria-hidden="true">
+    <div className="relative mx-auto w-full max-w-md animate-fade-up [animation-delay:150ms] lg:mr-0 xl:max-w-lg" aria-hidden="true">
       <div className="absolute -inset-4 -z-10 rounded-3xl bg-teal-100/60 blur-2xl" />
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-200/60 sm:p-6">
         <div className="flex items-start gap-4">

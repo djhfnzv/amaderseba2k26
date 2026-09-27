@@ -1,4 +1,4 @@
-import type { AppointmentAction, AppointmentStatus, ConsultationType, PaymentStatus } from "@/types/database";
+import type { AppointmentAction, AppointmentStatus, PaymentMethod, PaymentStatus } from "@/types/database";
 
 /** Keep in sync with the M7 migration. */
 export const HOLD_MINUTES = 5;
@@ -21,14 +21,23 @@ export const EVENT_LABEL: Record<AppointmentAction, string> = {
   started: "Consultation started",
   completed: "Completed",
   no_show: "Marked as no-show",
+  payment_received: "Payment received",
+  expired: "Expired — payment not completed",
+  refunded: "Refunded",
 };
 
-/** Until M8 there is no online payment: in-person is paid at the chamber. */
-export function paymentLabel(type: ConsultationType, status: PaymentStatus): string {
-  if (status === "paid") return "Paid";
+/** Short, human payment state for an appointment. */
+export function paymentLabel(
+  method: PaymentMethod,
+  status: PaymentStatus,
+  appointmentStatus?: AppointmentStatus,
+): string {
+  if (status === "paid") return "Paid online";
   if (status === "refunded") return "Refunded";
+  if (status === "partially_refunded") return "Partly refunded";
   if (status === "waived") return "No charge";
-  return type === "in_person" ? "Pay at the chamber" : "Payment due before the call";
+  if (method === "at_chamber") return "Pay at the chamber";
+  return appointmentStatus === "pending_payment" ? "Awaiting payment" : "Not paid";
 }
 
 export const isLive = (s: AppointmentStatus) => s === "pending_payment" || s === "confirmed";

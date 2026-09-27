@@ -93,7 +93,7 @@ function CompleteProfileCard({ percent, missing }: { percent: number; missing: s
           aria-valuemax={100}
           aria-label="Profile completeness"
         >
-          <div className="h-full rounded-full bg-teal-700" style={{ width: `${percent}%` }} />
+          <div className="h-full rounded-full bg-teal-700 transition-[width] duration-700 ease-out" style={{ width: `${percent}%` }} />
         </div>
       </div>
       <Link

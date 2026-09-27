@@ -36,7 +36,8 @@ with your email in the SQL editor. Log out and back in.
 | `feature/m5-search` | M5 Search & Discovery | ✅ merged |
 | `feature/m6-schedule` | M6 Schedule Engine | ✅ merged |
 | `feature/m7-booking` | M7 Appointments & Booking | ✅ merged |
-| `feature/m13-admin-users` | M13 (basic) Admin user management | ✅ |
+| `feature/m13-admin-users` | M13 (basic) Admin user management | ✅ merged |
+| `feature/m8-payments` | M8 Payments (SSLCommerz) | ✅ |
 
 ## M1 — Authentication & roles
 
@@ -146,6 +147,30 @@ with your email in the SQL editor. Log out and back in.
 - Admins can't suspend themselves or other admins.
 - **Admin dashboard**: pending verifications, appointments today/upcoming, patients, doctors
   (verified), suspended accounts.
+
+## M8 — Payments (SSLCommerz)
+
+- **Checkout:** after the 5-minute hold, the patient confirms. Online consultations are paid online;
+  in-person visits can be paid online or at the chamber. Paying online creates a
+  **pending payment** appointment that keeps the slot for 15 minutes (admin-configurable) and
+  sends the patient to SSLCommerz (card, bKash, Nagad, internet banking).
+- **Confirmation:** SSLCommerz posts back to `/api/payments/sslcommerz/{success|fail|cancel|ipn}`.
+  The server **re-validates every transaction with SSLCommerz** (never trusts the redirect), checks
+  the amount, then confirms the appointment. Handling is idempotent (redirect + IPN). Unpaid
+  bookings expire after the window and the slot is released; patients can retry until then.
+- **Refunds:** on cancellation of a paid appointment — full if the doctor/admin cancels or the
+  patient cancels ≥ 24h before, 50% if later (both admin-configurable). Issued through the
+  SSLCommerz refund API; failures are listed for admins to retry.
+- **Commission & payouts:** 10% platform commission (configurable) recorded per payment. Doctors see
+  earnings and payouts at `/doctor/earnings`; admins record payouts at `/admin/payouts`.
+- **Admin:** `/admin/payments` (payments, revenue, failed refunds), `/admin/payouts`,
+  `/admin/settings` (commission, refund policy, payment window).
+- **Receipt:** printable at `/patient/appointments/[id]/receipt` (FR-P-05).
+- **Config (.env.local):** `PAYMENT_PROVIDER=sslcommerz`, `SSLCOMMERZ_STORE_ID`,
+  `SSLCOMMERZ_STORE_PASSWORD`, `SSLCOMMERZ_SANDBOX=true|false`. The public sandbox test store is
+  `testbox` / `qwerty`. `PAYMENT_PROVIDER=mock` gives an offline test gateway (`/pay/mock`),
+  refused in production. The IPN URL must be publicly reachable, so IPN only works once deployed;
+  locally the browser redirect completes the payment.
 
 ## Project layout
 

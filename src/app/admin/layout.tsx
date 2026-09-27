@@ -10,6 +10,9 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
         { href: "/admin", label: "Dashboard", icon: "home", exact: true },
         { href: "/admin/verifications", label: "Verifications", icon: "shield" },
         { href: "/admin/users", label: "Users", icon: "users" },
+        { href: "/admin/payments", label: "Payments", icon: "wallet" },
+        { href: "/admin/payouts", label: "Payouts", icon: "banknote" },
+        { href: "/admin/settings", label: "Settings", icon: "cog" },
       ]}
     >
       {children}

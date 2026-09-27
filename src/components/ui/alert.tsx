@@ -12,7 +12,7 @@ export function Alert({
   return (
     <div
       role={kind === "error" ? "alert" : "status"}
-      className={`rounded-lg border px-3 py-2 text-sm ${styles}`}
+      className={`animate-fade-in rounded-lg border px-3 py-2 text-sm ${styles}`}
     >
       {children}
     </div>

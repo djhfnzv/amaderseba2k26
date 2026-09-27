@@ -59,7 +59,7 @@ export default async function DoctorAppointmentPage({ params }: PageProps<"/doct
                 {CONSULTATION_TYPE_LABEL[appt.consultation_type]}
                 {appt.chamber && ` · ${appt.chamber.name}`}
               </Row>
-              <Row label="Fee">{formatFee(appt.fee)} · {paymentLabel(appt.consultation_type, appt.payment_status)}</Row>
+              <Row label="Fee">{formatFee(appt.fee)} · {paymentLabel(appt.payment_method, appt.payment_status, appt.status)}</Row>
               <Row label="Contact">{[appt.patient?.phone, appt.patient?.email].filter(Boolean).join(" · ") || "—"}</Row>
               {appt.patient_note && (
                 <div className="rounded-lg bg-amber-50 p-3 sm:col-span-2">

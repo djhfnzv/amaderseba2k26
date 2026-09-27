@@ -98,8 +98,15 @@ export async function getOwnHold(
 // -----------------------------------------------------------------------------
 // Patient side
 // -----------------------------------------------------------------------------
+/** Marks unpaid bookings whose payment deadline has passed as expired (frees their slots). */
+async function expireStale(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const { error } = await supabase.rpc("expire_stale_payments", {});
+  if (error) console.error("[expire_stale_payments]", error.message);
+}
+
 export async function listPatientAppointments(patientId: string, limit?: number) {
   const supabase = await createClient();
+  await expireStale(supabase);
   let q = supabase.from("appointments").select("*").eq("patient_id", patientId).order("slot_start", { ascending: false });
   if (limit) q = q.limit(limit);
   const { data, error } = await q;
@@ -126,6 +133,7 @@ export async function listEvents(appointmentId: string): Promise<AppointmentEven
 /** One appointment the caller may see (RLS), with doctor + chamber. */
 export async function getAppointmentWithDoctor(id: string): Promise<WithDoctor | null> {
   const supabase = await createClient();
+  await expireStale(supabase);
   const { data } = await supabase.from("appointments").select("*").eq("id", id).maybeSingle();
   if (!data) return null;
   return (await attachDoctors([data]))[0];
@@ -138,6 +146,7 @@ export type DoctorView = "today" | "upcoming" | "past";
 
 export async function listDoctorAppointments(doctorId: string, view: DoctorView, timeZone: string) {
   const supabase = await createClient();
+  await expireStale(supabase);
   const startOfToday = zonedStartOfDay(timeZone, 0);
   const startOfTomorrow = zonedStartOfDay(timeZone, 1);
 

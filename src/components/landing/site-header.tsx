@@ -4,7 +4,7 @@ import { Logo } from "./logo";
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur" style={{ viewTransitionName: "site-header" }}>
       <div className="page-container flex h-16 items-center justify-between gap-4">
         <Logo />
 

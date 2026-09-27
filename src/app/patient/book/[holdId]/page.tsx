@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { DoctorAvatar } from "@/components/doctor/doctor-avatar";
 import { LocalTime } from "@/components/ui/local-time";
-import { paymentLabel } from "@/lib/appointments/constants";
 import { getOwnHold } from "@/lib/appointments/queries";
 import { requireRole } from "@/lib/auth/guards";
 import { doctorPhotoUrl, formatFee } from "@/lib/doctor/constants";
@@ -44,7 +43,6 @@ export default async function ConfirmBookingPage({ params }: PageProps<"/patient
           : "Chamber",
     ],
     ["Fee", formatFee(hold.fee)],
-    ["Payment", paymentLabel(hold.consultation_type, "unpaid")],
   ];
 
   return (
@@ -73,7 +71,13 @@ export default async function ConfirmBookingPage({ params }: PageProps<"/patient
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-        <ConfirmForm holdId={hold.id} slug={doctor.slug} expiresAt={hold.expires_at} />
+        <ConfirmForm
+          holdId={hold.id}
+          slug={doctor.slug}
+          expiresAt={hold.expires_at}
+          consultationType={hold.consultation_type}
+          fee={hold.fee}
+        />
       </section>
     </div>
   );

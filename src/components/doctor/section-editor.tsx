@@ -29,7 +29,7 @@ export function SectionEditor({ section, items }: { section: SectionKey; items: 
         <ul className="divide-y divide-slate-200 rounded-xl border border-slate-200">
           {items.map((item) =>
             editing === item.id ? (
-              <li key={item.id} className="p-4">
+              <li key={item.id} className="animate-fade-down p-4">
                 <ItemForm section={section} item={item} onDone={() => setEditing(null)} />
               </li>
             ) : (
@@ -46,7 +46,7 @@ export function SectionEditor({ section, items }: { section: SectionKey; items: 
       )}
 
       {editing === "new" ? (
-        <div className="rounded-xl border border-teal-200 bg-teal-50/40 p-4">
+        <div className="animate-fade-down rounded-xl border border-teal-200 bg-teal-50/40 p-4">
           <ItemForm section={section} onDone={() => setEditing(null)} />
         </div>
       ) : (

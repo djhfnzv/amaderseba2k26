@@ -1,5 +1,6 @@
 import { SlotPicker } from "@/components/schedule/slot-picker";
-import { startBooking } from "@/lib/appointments/actions";
+import { BookingWidget } from "@/components/booking/booking-widget";
+import { todayIn } from "@/lib/schedule/queries";
 import type { AvailableSlot } from "@/types/database";
 import { DoctorAvatar } from "./doctor-avatar";
 import {
@@ -27,6 +28,7 @@ export function PortfolioView({
   const { profile, specialties, education, experience, chambers, publications, awards } = portfolio;
   const years = yearsOfExperience(profile.practice_since_year);
   const degrees = education.map((e) => e.degree).join(", ");
+  const chamberNames = Object.fromEntries(chambers.map((c) => [c.id, c.name]));
 
   return (
     <div className={embedded ? "@container" : "page-container @container py-8 lg:py-12"}>
@@ -110,42 +112,59 @@ export function PortfolioView({
 
       {/* Side column */}
       <aside className={`flex min-w-0 flex-col gap-6 @4xl:sticky @4xl:self-start ${embedded ? "@4xl:top-6" : "@4xl:top-24"}`}>
-        <section className="rounded-2xl border border-slate-200 bg-white p-6">
-          <h2 className="text-lg font-semibold text-slate-900">Consultation</h2>
-          <ul className="mt-4 flex flex-col gap-3 text-sm">
-            {profile.offers_online && (
-              <FeeLine label="Online video consultation" fee={formatFee(profile.fee_online)} />
-            )}
-            {profile.offers_in_person && (
-              <FeeLine label="In-person at chamber" fee={formatFee(profile.fee_in_person)} />
-            )}
-            {!profile.offers_online && !profile.offers_in_person && (
-              <li className="text-slate-600">Consultation details coming soon.</li>
-            )}
-          </ul>
-        </section>
-
-        {(profile.offers_online || profile.offers_in_person) && (
+        {bookable ? (
           <section className="rounded-2xl border border-slate-200 bg-white p-6">
             <h2 className="text-lg font-semibold text-slate-900">Book an appointment</h2>
             <div className="mt-4">
-              <SlotPicker
-                slots={slots}
-                chamberNames={Object.fromEntries(chambers.map((c) => [c.id, c.name]))}
-                select={
-                  bookable
-                    ? { action: startBooking, hidden: { doctorId: profile.user_id, slug: profile.slug }, verb: "Book" }
-                    : undefined
-                }
-                note={
-                  bookable
-                    ? "We hold your slot for 5 minutes while you confirm. In-person visits are paid at the chamber."
-                    : "Booking is enabled once your profile is verified."
-                }
-                emptyText="No open slots in the next 7 days."
+              <BookingWidget
+                doctorId={profile.user_id}
+                slug={profile.slug}
+                today={todayIn(profile.timezone)}
+                initialSlots={slots}
+                chamberNames={chamberNames}
+                options={[
+                  ...(profile.offers_online
+                    ? [{ type: "online" as const, label: "Online video consultation", detail: "From your phone or computer", fee: formatFee(profile.fee_online) }]
+                    : []),
+                  ...(profile.offers_in_person
+                    ? [{
+                        type: "in_person" as const,
+                        label: "In-person visit",
+                        detail: chambers.length ? chambers.map((c) => `${c.name}, ${c.city}`).join(" · ") : "At the doctor's chamber",
+                        fee: formatFee(profile.fee_in_person),
+                      }]
+                    : []),
+                ]}
               />
+              <p className="mt-4 text-xs text-slate-500">We hold your chosen time for 5 minutes while you confirm.</p>
             </div>
           </section>
+        ) : (
+          <>
+            <section className="rounded-2xl border border-slate-200 bg-white p-6">
+              <h2 className="text-lg font-semibold text-slate-900">Consultation</h2>
+              <ul className="mt-4 flex flex-col gap-3 text-sm">
+                {profile.offers_online && <FeeLine label="Online video consultation" fee={formatFee(profile.fee_online)} />}
+                {profile.offers_in_person && <FeeLine label="In-person at chamber" fee={formatFee(profile.fee_in_person)} />}
+                {!profile.offers_online && !profile.offers_in_person && (
+                  <li className="text-slate-600">Consultation details coming soon.</li>
+                )}
+              </ul>
+            </section>
+            {(profile.offers_online || profile.offers_in_person) && (
+              <section className="rounded-2xl border border-slate-200 bg-white p-6">
+                <h2 className="text-lg font-semibold text-slate-900">Available slots (preview)</h2>
+                <div className="mt-4">
+                  <SlotPicker
+                    slots={slots}
+                    chamberNames={chamberNames}
+                    note="Booking is enabled once your profile is verified."
+                    emptyText="No open slots in the next 7 days."
+                  />
+                </div>
+              </section>
+            )}
+          </>
         )}
 
         {chambers.length > 0 && (

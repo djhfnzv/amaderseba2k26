@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth/guards";
+import { processPendingRefunds } from "@/lib/payments/service";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { formToObject, type FormState } from "@/lib/validation/form-state";
@@ -52,6 +53,9 @@ export async function setUserStatus(_prev: FormState, formData: FormData): Promi
     ban_duration: status === "suspended" ? BAN_FOREVER : "none",
   });
   if (banError) console.error("[setUserStatus ban]", banError.message);
+
+  // Upcoming appointments cancelled by a suspension get their refunds now.
+  if (status === "suspended") await processPendingRefunds();
 
   revalidatePath("/admin", "layout");
   revalidatePath("/doctors");

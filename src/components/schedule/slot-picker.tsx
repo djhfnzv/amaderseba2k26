@@ -117,7 +117,7 @@ export function SlotPicker({ slots, chamberNames, select, note, emptyText = "No 
         })}
       </div>
 
-      <ul className="grid grid-cols-3 gap-2" aria-label="Available times">
+      <ul key={activeDay ?? "none"} className="grid animate-fade-in grid-cols-3 gap-2" aria-label="Available times">
         {daySlots.map((s) => {
           const label = timeFmt.format(new Date(s.slot_start));
           const isPicked = picked?.slot_start === s.slot_start && picked.consultation_type === s.consultation_type;

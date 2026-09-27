@@ -19,7 +19,8 @@ export const availabilitySchema = z
     startTime: time("start time"),
     endTime: time("end time"),
     consultationType: z.enum(["online", "in_person"], { error: "Choose a consultation type" }),
-    chamberId: z.preprocess(blankToNull, z.string().max(64).nullable()),
+    // Not sent at all for online blocks (the chamber picker is hidden).
+    chamberId: z.preprocess((v) => blankToNull(v) ?? null, z.string().max(64).nullable()),
     consultationMinutes: z.coerce
       .number({ error: "Enter the consultation length" })
       .int()

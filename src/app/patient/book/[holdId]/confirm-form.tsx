@@ -1,10 +1,12 @@
 "use client";
 
-import { useActionState, useSyncExternalStore } from "react";
+import { useActionState, useState, useSyncExternalStore } from "react";
 import { confirmBooking, releaseHold } from "@/lib/appointments/actions";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { TextareaField } from "@/components/ui/textarea-field";
+import { formatFee } from "@/lib/doctor/constants";
+import type { ConsultationType } from "@/types/database";
 
 /** A 1-second clock that only ticks in the browser (null during SSR/hydration). */
 function subscribeClock(onTick: () => void) {
@@ -13,7 +15,22 @@ function subscribeClock(onTick: () => void) {
 }
 const nowSeconds = () => Math.floor(Date.now() / 1000);
 
-export function ConfirmForm({ holdId, slug, expiresAt }: { holdId: string; slug: string; expiresAt: string }) {
+export function ConfirmForm({
+  holdId,
+  slug,
+  expiresAt,
+  consultationType,
+  fee,
+}: {
+  holdId: string;
+  slug: string;
+  expiresAt: string;
+  consultationType: ConsultationType;
+  fee: number | null;
+}) {
+  const [payment, setPayment] = useState<"online" | "at_chamber">("online");
+  const hasFee = (fee ?? 0) > 0;
+  const paysOnline = hasFee && (consultationType === "online" || payment === "online");
   const [state, action, pending] = useActionState(confirmBooking, undefined);
   const now = useSyncExternalStore(subscribeClock, nowSeconds, () => null);
   const left = now === null ? null : Math.max(0, new Date(expiresAt).getTime() - now * 1000);
@@ -33,6 +50,7 @@ export function ConfirmForm({ holdId, slug, expiresAt }: { holdId: string; slug:
 
       <form action={action} className="flex flex-col gap-4">
         <input type="hidden" name="holdId" value={holdId} />
+        <input type="hidden" name="payment" value={paysOnline ? "online" : "at_chamber"} />
         {state?.error && <Alert>{state.error}</Alert>}
         <TextareaField
           label="Reason for visit (optional)"
@@ -44,13 +62,57 @@ export function ConfirmForm({ holdId, slug, expiresAt }: { holdId: string; slug:
         <p className="text-xs text-slate-500">
           Shared only with this doctor. For emergencies, go to the nearest hospital.
         </p>
+        {hasFee && (
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1 text-sm font-medium text-slate-800">Payment</legend>
+            {consultationType === "online" ? (
+              <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-700">
+                Online consultations are paid in advance — card, bKash, Nagad or internet banking via SSLCommerz.
+              </p>
+            ) : (
+              (["online", "at_chamber"] as const).map((opt) => (
+                <label
+                  key={opt}
+                  className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-300 p-3 has-[:checked]:border-teal-600 has-[:checked]:bg-teal-50"
+                >
+                  <input
+                    type="radio"
+                    name="paymentChoice"
+                    value={opt}
+                    checked={payment === opt}
+                    onChange={() => setPayment(opt)}
+                    className="mt-0.5 size-4 accent-teal-700"
+                  />
+                  <span className="text-sm">
+                    <span className="font-medium text-slate-900">{opt === "online" ? "Pay now online" : "Pay at the chamber"}</span>
+                    <span className="block text-slate-600">
+                      {opt === "online" ? "Card, bKash, Nagad or internet banking via SSLCommerz." : "Pay the doctor's chamber on the day of your visit."}
+                    </span>
+                  </span>
+                </label>
+              ))
+            )}
+          </fieldset>
+        )}
         <Button type="submit" disabled={pending || expired}>
-          {pending ? "Confirming…" : "Confirm appointment"}
+          {pending
+            ? paysOnline
+              ? "Opening secure payment…"
+              : "Confirming…"
+            : paysOnline
+              ? `Continue to pay ${formatFee(fee)}`
+              : "Confirm appointment"}
         </Button>
+        {paysOnline && (
+          <p className="text-center text-xs text-slate-500">
+            Your slot is kept for 15 minutes while you complete the payment.
+          </p>
+        )}
       </form>
 
       <form action={releaseHold}>
         <input type="hidden" name="holdId" value={holdId} />
+        <input type="hidden" name="payment" value={paysOnline ? "online" : "at_chamber"} />
         <input type="hidden" name="slug" value={slug} />
         <button type="submit" className="w-full text-center text-sm font-medium text-slate-600 hover:text-slate-900">
           Choose a different time

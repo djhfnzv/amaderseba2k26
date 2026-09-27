@@ -54,7 +54,7 @@ export function Features() {
           {features.map(({ icon: Icon, title, body }) => (
             <article
               key={title}
-              className="rounded-2xl border border-slate-200 bg-white p-6 transition-shadow hover:shadow-md"
+              className="rounded-2xl border border-slate-200 bg-white p-6 transition-[box-shadow,translate] duration-200 hover:-translate-y-0.5 hover:shadow-md"
             >
               <span className="grid size-11 place-items-center rounded-xl bg-teal-50 text-teal-700">
                 <Icon className="size-6" />

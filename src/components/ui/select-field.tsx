@@ -4,7 +4,8 @@ type SelectFieldProps = SelectHTMLAttributes<HTMLSelectElement> & {
   label: string;
   name: string;
   options: { value: string; label: string }[];
-  placeholder?: string;
+  /** Empty first option; pass null for no empty option. */
+  placeholder?: string | null;
   errors?: string[];
 };
 
@@ -34,7 +35,7 @@ export function SelectField({
         }`}
         {...props}
       >
-        <option value="">{placeholder}</option>
+        {placeholder !== null && <option value="">{placeholder}</option>}
         {options.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}

@@ -66,7 +66,7 @@ export default async function DoctorAppointmentsPage({ searchParams }: PageProps
                   <p className="truncate font-medium text-slate-900">{a.patient?.full_name || a.patient?.email || "Patient"}</p>
                   <p className="text-sm text-slate-600">
                     {CONSULTATION_TYPE_LABEL[a.consultation_type]}
-                    {a.chamber && ` · ${a.chamber.name}`} · {paymentLabel(a.consultation_type, a.payment_status)}
+                    {a.chamber && ` · ${a.chamber.name}`} · {paymentLabel(a.payment_method, a.payment_status, a.status)}
                   </p>
                 </div>
                 <AppointmentStatusPill status={a.status} />

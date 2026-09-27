@@ -138,7 +138,7 @@ export function DoctorSearch({
             <span aria-hidden="true">{filtersOpen ? "−" : "+"}</span>
           </button>
 
-          <div id="doctor-filters" className={`${filtersOpen ? "mt-3 flex" : "hidden"} flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 @3xl:mt-0 @3xl:flex`}>
+          <div id="doctor-filters" className={`${filtersOpen ? "mt-3 flex animate-fade-down" : "hidden"} flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 @3xl:mt-0 @3xl:flex`}>
             <Select label="Specialty" name="specialty" value={filters.specialty} onChange={(v) => update({ specialty: v })} placeholder="All specialties"
               options={facets.specialties.map((s) => ({ value: s.slug, label: `${s.name} (${s.count})` }))} />
             <Select label="Consultation type" name="type" value={filters.type} onChange={(v) => update({ type: v as SearchFilters["type"] })} placeholder="Any"
@@ -206,8 +206,8 @@ export function DoctorSearch({
 
           {results.doctors.length > 0 ? (
             <ul className={`grid-auto-fill gap-4 transition-opacity [--card-min:16rem] ${loading ? "opacity-60" : ""}`}>
-              {results.doctors.map((d) => (
-                <li key={d.user_id}>
+              {results.doctors.map((d, i) => (
+                <li key={d.user_id} className="animate-fade-up" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
                   <DoctorCard doctor={d} profileBase={profileBase} />
                 </li>
               ))}
