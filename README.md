@@ -37,7 +37,8 @@ with your email in the SQL editor. Log out and back in.
 | `feature/m6-schedule` | M6 Schedule Engine | ✅ merged |
 | `feature/m7-booking` | M7 Appointments & Booking | ✅ merged |
 | `feature/m13-admin-users` | M13 (basic) Admin user management | ✅ merged |
-| `feature/m8-payments` | M8 Payments (SSLCommerz) | ✅ |
+| `feature/m8-payments` | M8 Payments (SSLCommerz) | ✅ merged |
+| `feature/m9-video-consultation` | M9 Video consultation (free WebRTC) | ✅ |
 
 ## M1 — Authentication & roles
 
@@ -171,6 +172,28 @@ with your email in the SQL editor. Log out and back in.
   `testbox` / `qwerty`. `PAYMENT_PROVIDER=mock` gives an offline test gateway (`/pay/mock`),
   refused in production. The IPN URL must be publicly reachable, so IPN only works once deployed;
   locally the browser redirect completes the payment.
+
+## M9 — Video consultation (free, peer-to-peer WebRTC)
+
+- **Room** `/consult/[appointmentId]` for online appointments — only that doctor and patient. Opens
+  10 min before the start; closes when the doctor ends it or 30 min after the scheduled end.
+  Before that it shows a countdown and opens automatically.
+- **Lobby:** camera/mic preview, device pickers, mute and camera-off; falls back to audio-only if
+  there's no camera.
+- **Call:** video/audio go **directly between the two browsers** (WebRTC, always encrypted).
+  Signaling uses a private Supabase Realtime channel `consult:<appointmentId>` protected by RLS on
+  `realtime.messages`. The doctor always makes the offer (no collisions); dropped connections
+  restart ICE automatically. Not recorded.
+- **Chat & files** (FR-P-09, FR-D-08): saved to `consultation_messages`; files go to the private
+  `consultation-files` bucket and open via 60-second links. Read-only after the call.
+- **Doctor side panel:** patient health profile, allergies, reports, and autosaved private
+  **consultation notes**.
+- **Status:** doctor joining → *In progress*; **End consultation** → *Completed* for both.
+- **Join buttons** on the patient and doctor appointment pages, active only in the room window.
+- **Network:** STUN (free, Google) is built in. For reliable calls on mobile networks add a TURN
+  server in `.env.local` — either `TURN_URLS`/`TURN_USERNAME`/`TURN_CREDENTIAL` or
+  `METERED_TURN_DOMAIN`/`METERED_TURN_API_KEY` (metered.ca free tier). Cameras need `localhost`
+  or HTTPS.
 
 ## Project layout
 

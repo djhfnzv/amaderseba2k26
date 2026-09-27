@@ -375,6 +375,36 @@ type PayoutRow = {
 
 type RefundTicket = { refund_id: string; amount: number; bank_tran_id: string | null; provider: PaymentProvider; tran_id: string };
 
+export type ConsultationStatus = "waiting" | "live" | "ended";
+export type RoomStatus = "not_open" | "open" | "closed" | "ended";
+
+type ConsultationRow = {
+  id: string;
+  appointment_id: string;
+  doctor_id: string;
+  patient_id: string;
+  status: ConsultationStatus;
+  started_at: string | null;
+  ended_at: string | null;
+  notes: string | null;
+  notes_updated_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type ConsultationMessageRow = {
+  id: string;
+  appointment_id: string;
+  sender_id: string;
+  kind: "text" | "file";
+  body: string | null;
+  file_path: string | null;
+  file_name: string | null;
+  mime_type: MedicalFileMime | null;
+  size_bytes: number | null;
+  created_at: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -474,6 +504,13 @@ export type Database = {
       payments: { Row: PaymentRow; Insert: never; Update: never; Relationships: [] };
       refunds: { Row: RefundRow; Insert: never; Update: never; Relationships: [] };
       payouts: { Row: PayoutRow; Insert: never; Update: never; Relationships: [] };
+      consultations: { Row: ConsultationRow; Insert: never; Update: never; Relationships: [] };
+      consultation_messages: {
+        Row: ConsultationMessageRow;
+        Insert: Omit<ConsultationMessageRow, "id" | "sender_id" | "created_at"> & { sender_id?: string };
+        Update: never;
+        Relationships: [];
+      };
       verification_events: {
         Row: VerificationEventRow;
         Insert: never;
@@ -530,6 +567,12 @@ export type Database = {
         Returns: undefined;
       };
       copy_availability_day: { Args: { p_from: number; p_to: number[] }; Returns: number };
+      open_consultation: {
+        Args: { p_appointment: string };
+        Returns: { consultation_id: string; role: "doctor" | "patient"; room_status: RoomStatus; opens_at: string; closes_at: string }[];
+      };
+      end_consultation: { Args: { p_appointment: string }; Returns: undefined };
+      save_consultation_notes: { Args: { p_appointment: string; p_notes: string }; Returns: string };
       get_available_slots: {
         Args: { p_doctor: string; p_from?: string | null; p_days?: number; p_type?: ConsultationType | null };
         Returns: AvailableSlot[];
@@ -591,3 +634,5 @@ export type PlatformSettings = PlatformSettingsRow;
 export type Payment = PaymentRow;
 export type Refund = RefundRow;
 export type Payout = PayoutRow;
+export type Consultation = ConsultationRow;
+export type ConsultationMessage = ConsultationMessageRow;
