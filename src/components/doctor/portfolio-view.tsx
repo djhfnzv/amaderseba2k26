@@ -1,3 +1,5 @@
+import { SlotPicker } from "@/components/schedule/slot-picker";
+import type { AvailableSlot } from "@/types/database";
 import { DoctorAvatar } from "./doctor-avatar";
 import {
   doctorPhotoUrl,
@@ -8,7 +10,7 @@ import {
 import type { Portfolio } from "@/lib/doctor/queries";
 
 /** The public portfolio page body (also used for the doctor's own preview). */
-export function PortfolioView({ portfolio }: { portfolio: Portfolio }) {
+export function PortfolioView({ portfolio, slots }: { portfolio: Portfolio; slots: AvailableSlot[] }) {
   const { profile, specialties, education, experience, chambers, publications, awards } = portfolio;
   const years = yearsOfExperience(profile.practice_since_year);
   const degrees = education.map((e) => e.degree).join(", ");
@@ -105,14 +107,21 @@ export function PortfolioView({ portfolio }: { portfolio: Portfolio }) {
               <li className="text-slate-600">Consultation details coming soon.</li>
             )}
           </ul>
-          <button
-            type="button"
-            disabled
-            className="mt-5 h-11 w-full cursor-not-allowed rounded-lg bg-teal-700/60 text-sm font-semibold text-white"
-          >
-            Online booking opens soon
-          </button>
         </section>
+
+        {(profile.offers_online || profile.offers_in_person) && (
+          <section className="rounded-2xl border border-slate-200 bg-white p-6">
+            <h2 className="text-lg font-semibold text-slate-900">Available slots</h2>
+            <div className="mt-4">
+              <SlotPicker
+                slots={slots}
+                chamberNames={Object.fromEntries(chambers.map((c) => [c.id, c.name]))}
+                note="Online booking opens soon. Meanwhile, call the chamber for a serial."
+                emptyText="No open slots in the next 7 days."
+              />
+            </div>
+          </section>
+        )}
 
         {chambers.length > 0 && (
           <section className="rounded-2xl border border-slate-200 bg-white p-6">

@@ -78,6 +78,7 @@ type DoctorProfileRow = {
   offers_in_person: boolean;
   fee_online: number | null;
   fee_in_person: number | null;
+  timezone: string;
   is_verified: boolean;
   verified_at: string | null;
   created_at: string;
@@ -201,6 +202,41 @@ export type DoctorSearchRow = {
   total_count: number;
 };
 
+export type ConsultationType = "online" | "in_person";
+
+type DoctorAvailabilityRow = {
+  id: string;
+  doctor_id: string;
+  weekday: number;
+  start_time: string;
+  end_time: string;
+  consultation_type: ConsultationType;
+  chamber_id: string | null;
+  consultation_minutes: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+type DoctorLeaveRow = {
+  id: string;
+  doctor_id: string;
+  start_date: string;
+  end_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  reason: string | null;
+  created_at: string;
+};
+
+export type AvailableSlot = {
+  slot_start: string;
+  slot_end: string;
+  consultation_type: ConsultationType;
+  chamber_id: string | null;
+  consultation_minutes: number;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -272,6 +308,21 @@ export type Database = {
         Update: never;
         Relationships: [];
       };
+      doctor_availability: {
+        Row: DoctorAvailabilityRow;
+        Insert: Omit<DoctorAvailabilityRow, "id" | "doctor_id" | "created_at" | "updated_at" | "is_active"> & {
+          doctor_id?: string;
+          is_active?: boolean;
+        };
+        Update: Partial<Omit<DoctorAvailabilityRow, "id" | "doctor_id" | "created_at" | "updated_at">>;
+        Relationships: [];
+      };
+      doctor_leaves: {
+        Row: DoctorLeaveRow;
+        Insert: Omit<DoctorLeaveRow, "id" | "doctor_id" | "created_at"> & { doctor_id?: string };
+        Update: never;
+        Relationships: [];
+      };
       verification_events: {
         Row: VerificationEventRow;
         Insert: never;
@@ -286,6 +337,10 @@ export type Database = {
       doctor_is_public: { Args: { doctor: string }; Returns: boolean };
       verification_request_editable: { Args: { request: string }; Returns: boolean };
       submit_verification_request: { Args: Record<string, never>; Returns: undefined };
+      get_available_slots: {
+        Args: { p_doctor: string; p_from?: string | null; p_days?: number; p_type?: ConsultationType | null };
+        Returns: AvailableSlot[];
+      };
       search_doctors: {
         Args: {
           p_query?: string | null;
@@ -332,3 +387,5 @@ export type DoctorAward = DoctorAwardRow;
 export type VerificationRequest = VerificationRequestRow;
 export type VerificationDocument = VerificationDocumentRow;
 export type VerificationEvent = VerificationEventRow;
+export type DoctorAvailability = DoctorAvailabilityRow;
+export type DoctorLeave = DoctorLeaveRow;

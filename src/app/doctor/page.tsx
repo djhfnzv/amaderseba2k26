@@ -90,7 +90,7 @@ export default async function DoctorDashboard() {
       <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-5 sm:p-6">
         <h2 className="text-sm font-semibold text-slate-900">Coming soon</h2>
         <p className="mt-1 text-sm text-slate-600">
-          Weekly schedule, patient queue and prescriptions.
+          Appointments, patient queue and prescriptions.
         </p>
       </section>
     </div>
