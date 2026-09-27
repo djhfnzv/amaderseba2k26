@@ -181,6 +181,26 @@ type VerificationEventRow = {
   created_at: string;
 };
 
+export type DoctorSearchSort = "relevance" | "fee_asc" | "fee_desc" | "experience";
+
+export type DoctorSearchRow = {
+  user_id: string;
+  slug: string;
+  display_name: string;
+  headline: string | null;
+  photo_path: string | null;
+  practice_since_year: number | null;
+  languages: string[];
+  offers_online: boolean;
+  offers_in_person: boolean;
+  fee_online: number | null;
+  fee_in_person: number | null;
+  specialties: string[];
+  degrees: string[];
+  cities: string[];
+  total_count: number;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -266,6 +286,29 @@ export type Database = {
       doctor_is_public: { Args: { doctor: string }; Returns: boolean };
       verification_request_editable: { Args: { request: string }; Returns: boolean };
       submit_verification_request: { Args: Record<string, never>; Returns: undefined };
+      search_doctors: {
+        Args: {
+          p_query?: string | null;
+          p_specialty?: string | null;
+          p_type?: "online" | "in_person" | null;
+          p_min_fee?: number | null;
+          p_max_fee?: number | null;
+          p_language?: string | null;
+          p_city?: string | null;
+          p_sort?: DoctorSearchSort;
+          p_limit?: number;
+          p_offset?: number;
+        };
+        Returns: DoctorSearchRow[];
+      };
+      doctor_search_facets: {
+        Args: Record<string, never>;
+        Returns: {
+          languages: string[];
+          cities: string[];
+          specialties: { slug: string; name: string; count: number }[];
+        }[];
+      };
       review_verification_request: {
         Args: { p_request_id: string; p_decision: "approve" | "reject" | "revoke"; p_reason?: string | null };
         Returns: undefined;

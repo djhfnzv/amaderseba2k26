@@ -30,9 +30,9 @@ export function SiteFooter() {
           <ul className="mt-3 flex flex-col gap-2 text-sm">
             {navLinks.map((l) => (
               <li key={l.href}>
-                <a href={l.href} className="hover:text-white">
+                <Link href={l.href} className="hover:text-white">
                   {l.label}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>

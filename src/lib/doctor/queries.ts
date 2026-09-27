@@ -81,6 +81,11 @@ export async function getPortfolioDetails(doctorId: string): Promise<PortfolioDe
     supabase.from("doctor_awards").select("*").eq("doctor_id", doctorId).order("year", { ascending: false, nullsFirst: false }),
   ]);
 
+  // Surface failures instead of silently rendering empty sections.
+  for (const [name, res] of Object.entries({ spec, edu, exp, ch, pub, aw })) {
+    if (res.error) console.error(`[getPortfolioDetails ${name}]`, res.error);
+  }
+
   const ids = new Set((spec.data ?? []).map((s) => s.specialty_id));
   const all = await listSpecialties();
 

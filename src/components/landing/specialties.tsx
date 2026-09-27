@@ -1,18 +1,20 @@
+import Link from "next/link";
 import { SectionHeading } from "./section-heading";
 
+// Slugs match the seeded "specialties" table (M3 migration).
 const specialties = [
-  { name: "Medicine", desc: "General & internal medicine" },
-  { name: "Cardiology", desc: "Heart & blood pressure" },
-  { name: "Pediatrics", desc: "Child health" },
-  { name: "Gynecology", desc: "Women's health & pregnancy" },
-  { name: "Dermatology", desc: "Skin, hair & nails" },
-  { name: "Orthopedics", desc: "Bones, joints & spine" },
-  { name: "Psychiatry", desc: "Mental health" },
-  { name: "ENT", desc: "Ear, nose & throat" },
-  { name: "Neurology", desc: "Brain & nerves" },
-  { name: "Gastroenterology", desc: "Stomach & digestion" },
-  { name: "Endocrinology", desc: "Diabetes & hormones" },
-  { name: "Dentistry", desc: "Teeth & oral care" },
+  { slug: "medicine", name: "Medicine", desc: "General & internal medicine" },
+  { slug: "cardiology", name: "Cardiology", desc: "Heart & blood pressure" },
+  { slug: "pediatrics", name: "Pediatrics", desc: "Child health" },
+  { slug: "gynecology", name: "Gynecology", desc: "Women's health & pregnancy" },
+  { slug: "dermatology", name: "Dermatology", desc: "Skin, hair & nails" },
+  { slug: "orthopedics", name: "Orthopedics", desc: "Bones, joints & spine" },
+  { slug: "psychiatry", name: "Psychiatry", desc: "Mental health" },
+  { slug: "ent", name: "ENT", desc: "Ear, nose & throat" },
+  { slug: "neurology", name: "Neurology", desc: "Brain & nerves" },
+  { slug: "gastroenterology", name: "Gastroenterology", desc: "Stomach & digestion" },
+  { slug: "endocrinology", name: "Endocrinology", desc: "Diabetes & hormones" },
+  { slug: "dentistry", name: "Dentistry", desc: "Teeth & oral care" },
 ];
 
 export function Specialties() {
@@ -26,15 +28,22 @@ export function Specialties() {
         />
         <ul className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {specialties.map((s) => (
-            <li
-              key={s.name}
-              className="rounded-xl border border-slate-200 p-4 transition-colors hover:border-teal-300 hover:bg-teal-50/50"
-            >
-              <p className="font-semibold text-slate-900">{s.name}</p>
-              <p className="mt-0.5 text-sm text-slate-600">{s.desc}</p>
+            <li key={s.slug}>
+              <Link
+                href={`/doctors?specialty=${s.slug}`}
+                className="block h-full rounded-xl border border-slate-200 p-4 transition-colors hover:border-teal-300 hover:bg-teal-50/50 focus-visible:outline-2 focus-visible:outline-teal-700"
+              >
+                <p className="font-semibold text-slate-900">{s.name}</p>
+                <p className="mt-0.5 text-sm text-slate-600">{s.desc}</p>
+              </Link>
             </li>
           ))}
         </ul>
+        <div className="mt-8 text-center">
+          <Link href="/doctors" className="font-semibold text-teal-700 hover:underline">
+            See all doctors →
+          </Link>
+        </div>
       </div>
     </section>
   );
