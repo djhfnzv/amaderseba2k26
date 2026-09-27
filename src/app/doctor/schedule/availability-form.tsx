@@ -43,6 +43,7 @@ export function AvailabilityForm({
     <form action={action} className="flex flex-col gap-4" noValidate>
       {state?.error && <Alert>{state.error}</Alert>}
       {state?.message && <Alert kind="success">{state.message}</Alert>}
+      {type !== "in_person" && e?.chamberId && <Alert>{e.chamberId[0]}</Alert>}
 
       <fieldset>
         <legend className="mb-1.5 text-sm font-medium text-slate-800">Days</legend>

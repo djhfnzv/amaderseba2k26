@@ -27,8 +27,8 @@ export function AppShell({
   return (
     <div className="flex min-h-full flex-1 flex-col bg-slate-50">
       <AppSidebar nav={nav} userName={user.full_name || user.email || "Account"} roleLabel={ROLE_LABEL[user.role]} />
-      <div className="flex min-w-0 flex-1 flex-col lg:pl-64">
-        <main className="@container flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+      <div className="flex min-w-0 flex-1 flex-col lg:pl-64 print:pl-0">
+        <main className="@container flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-10 print:p-0">
           <div className="mx-auto w-full max-w-6xl">{children}</div>
         </main>
       </div>

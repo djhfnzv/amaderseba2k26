@@ -70,7 +70,7 @@ export default async function DoctorDashboard() {
           aria-valuemax={100}
           aria-label="Portfolio completeness"
         >
-          <div className="h-full rounded-full bg-teal-700" style={{ width: `${percent}%` }} />
+          <div className="h-full rounded-full bg-teal-700 transition-[width] duration-700 ease-out" style={{ width: `${percent}%` }} />
         </div>
         <ul className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
           {checklist.map((c) => (
@@ -95,13 +95,13 @@ export default async function DoctorDashboard() {
       <div className="grid gap-4 sm:grid-cols-2">
         <Link
           href="/doctor/appointments?view=today"
-          className={`rounded-2xl border p-5 transition-shadow hover:shadow-md ${todayCount ? "border-teal-300 bg-teal-50" : "border-slate-200 bg-white"}`}
+          className={`rounded-2xl border p-5 transition-[box-shadow,translate] duration-200 hover:-translate-y-0.5 hover:shadow-md ${todayCount ? "border-teal-300 bg-teal-50" : "border-slate-200 bg-white"}`}
         >
           <p className="text-sm font-medium text-slate-600">Today&apos;s queue</p>
           <p className="mt-1 text-3xl font-bold text-slate-900">{todayCount}</p>
           <p className="mt-2 text-sm font-semibold text-teal-700">Open queue →</p>
         </Link>
-        <Link href="/doctor/schedule" className="rounded-2xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-md">
+        <Link href="/doctor/schedule" className="rounded-2xl border border-slate-200 bg-white p-5 transition-[box-shadow,translate] duration-200 hover:-translate-y-0.5 hover:shadow-md">
           <p className="text-sm font-medium text-slate-600">Schedule</p>
           <p className="mt-1 text-lg font-semibold text-slate-900">Weekly hours & leave</p>
           <p className="mt-2 text-sm font-semibold text-teal-700">Manage →</p>

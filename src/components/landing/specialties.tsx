@@ -31,7 +31,7 @@ export function Specialties() {
             <li key={s.slug}>
               <Link
                 href={`/doctors?specialty=${s.slug}`}
-                className="block h-full rounded-xl border border-slate-200 p-4 transition-colors hover:border-teal-300 hover:bg-teal-50/50 focus-visible:outline-2 focus-visible:outline-teal-700"
+                className="block h-full rounded-xl border border-slate-200 p-4 transition-[border-color,background-color,translate] duration-200 hover:-translate-y-0.5 hover:border-teal-300 hover:bg-teal-50/50 focus-visible:outline-2 focus-visible:outline-teal-700"
               >
                 <p className="font-semibold text-slate-900">{s.name}</p>
                 <p className="mt-0.5 text-sm text-slate-600">{s.desc}</p>

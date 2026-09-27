@@ -21,7 +21,7 @@ export function CancelForm({ appointmentId, reasonRequired }: { appointmentId: s
   }
 
   return (
-    <form action={action} className="flex flex-col gap-3">
+    <form action={action} className="flex animate-fade-down flex-col gap-3">
       <input type="hidden" name="id" value={appointmentId} />
       {state?.error && <Alert>{state.error}</Alert>}
       <TextareaField

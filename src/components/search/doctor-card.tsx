@@ -9,7 +9,7 @@ export function DoctorCard({ doctor, profileBase = "/doctors" }: { doctor: Docto
   const href = `${profileBase}/${doctor.slug}`;
 
   return (
-    <article className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-md">
+    <article className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 transition-[box-shadow,translate] duration-200 hover:-translate-y-0.5 hover:shadow-md">
       <div className="flex gap-4">
         <DoctorAvatar name={doctor.display_name} photoUrl={doctorPhotoUrl(doctor.photo_path)} size={64} />
         <div className="min-w-0">

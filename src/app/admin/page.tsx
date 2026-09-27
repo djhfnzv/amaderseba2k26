@@ -53,7 +53,7 @@ export default async function AdminDashboard() {
           );
           const cls = `rounded-2xl border p-5 ${c.highlight ? "border-amber-300 bg-amber-50" : "border-slate-200 bg-white"}`;
           return c.href ? (
-            <Link key={c.label} href={c.href} className={`${cls} transition-shadow hover:shadow-md`}>
+            <Link key={c.label} href={c.href} className={`${cls} transition-[box-shadow,translate] duration-200 hover:-translate-y-0.5 hover:shadow-md`}>
               {body}
             </Link>
           ) : (

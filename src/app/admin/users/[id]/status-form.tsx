@@ -50,7 +50,7 @@ export function StatusForm({
   }
 
   return (
-    <form action={action} className="flex flex-col gap-3" noValidate>
+    <form action={action} className="flex animate-fade-down flex-col gap-3" noValidate>
       <input type="hidden" name="userId" value={userId} />
       <input type="hidden" name="status" value="suspended" />
       {state?.error && <Alert>{state.error}</Alert>}

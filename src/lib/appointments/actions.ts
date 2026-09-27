@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentUser, requireUser } from "@/lib/auth/guards";
+import { refundAppointment, startPaymentFor } from "@/lib/payments/service";
 import { createClient } from "@/lib/supabase/server";
 import type { FormState } from "@/lib/validation/form-state";
 
@@ -61,12 +62,35 @@ export async function confirmBooking(_prev: FormState, formData: FormData): Prom
   const note = String(formData.get("note") ?? "").trim().slice(0, 500);
   if (!UUID.test(holdId)) return { error: "Invalid booking." };
 
-  const supabase = await createClient();
-  const { data: appointmentId, error } = await supabase.rpc("confirm_booking", { p_hold: holdId, p_note: note || null });
-  if (error || !appointmentId) return { error: error ? friendly(error, "confirmBooking") : "Could not confirm." };
+  const payAtChamber = formData.get("payment") === "at_chamber";
 
+  const supabase = await createClient();
+  const { data: appointmentId, error } = await supabase.rpc("confirm_booking", {
+    p_hold: holdId,
+    p_note: note || null,
+    p_pay_at_chamber: payAtChamber,
+  });
+  if (error || !appointmentId) return { error: error ? friendly(error, "confirmBooking") : "Could not confirm." };
   revalidateAppointments();
-  redirect(`/patient/appointments/${appointmentId}?booked=1`);
+
+  const { data: appt } = await supabase.from("appointments").select("status").eq("id", appointmentId).single();
+  if (appt?.status !== "pending_payment") redirect(`/patient/appointments/${appointmentId}?booked=1`);
+
+  // Online payment: go straight to the gateway. If that fails, the patient can retry from the appointment page.
+  const started = await startPaymentFor(appointmentId);
+  if ("error" in started) redirect(`/patient/appointments/${appointmentId}?payment=error`);
+  redirect(started.redirectUrl);
+}
+
+/** Pay (or retry paying) for an appointment that is awaiting payment. */
+export async function payForAppointment(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireUser();
+  const id = String(formData.get("appointmentId") ?? "");
+  if (!UUID.test(id)) return { error: "Invalid appointment." };
+
+  const started = await startPaymentFor(id);
+  if ("error" in started) return { error: started.error };
+  redirect(started.redirectUrl);
 }
 
 export async function releaseHold(formData: FormData): Promise<void> {
@@ -94,8 +118,11 @@ export async function cancelAppointment(_prev: FormState, formData: FormData): P
   const { error } = await supabase.rpc("cancel_appointment", { p_id: id, p_reason: reason || null });
   if (error) return { error: friendly(error, "cancelAppointment"), values: { reason } };
 
+  // Paid online? Issue the refund the policy allows.
+  await refundAppointment(id);
+
   revalidateAppointments();
-  return { message: "The appointment has been cancelled." };
+  return { message: "The appointment has been cancelled. Any refund due is on its way." };
 }
 
 export async function rescheduleAppointment(_prev: FormState, formData: FormData): Promise<FormState> {

@@ -5,20 +5,16 @@ import { InlineAction } from "@/components/ui/inline-action";
 import { requireRole } from "@/lib/auth/guards";
 import { getOrCreateOwnProfile, getPortfolioDetails } from "@/lib/doctor/queries";
 import { formatDate } from "@/lib/format";
-import {
-  CONSULTATION_TYPE_LABEL,
-  WEEKDAYS,
-  formatClock,
-  slotsInBlock,
-} from "@/lib/schedule/constants";
+import { formatClock, slotsInBlock } from "@/lib/schedule/constants";
 import {
   getAvailableSlots,
   listOwnAvailability,
   listUpcomingLeaves,
   todayIn,
 } from "@/lib/schedule/queries";
-import { deleteAvailability, deleteLeave, toggleAvailability } from "./actions";
+import { deleteLeave } from "./actions";
 import { AvailabilityForm } from "./availability-form";
+import { WeekEditor } from "./week-editor";
 import { LeaveForm } from "./leave-form";
 import { TimezoneForm } from "./timezone-form";
 
@@ -61,70 +57,28 @@ export default async function SchedulePage() {
         <div className="flex min-w-0 flex-col gap-6">
           <Card
             title="Weekly hours"
-            description={`${blocks.length ? `${weeklySlots} bookable slots per week.` : "No hours yet."} Use several blocks in a day for breaks, e.g. 9–1 and 2–5.`}
+            description={`${blocks.length ? `${weeklySlots} bookable slots per week.` : "No hours yet."} Tap Edit to change a block, add several blocks for breaks, or copy a day to others.`}
           >
-            <ul className="divide-y divide-slate-200 rounded-xl border border-slate-200">
-              {WEEKDAYS.map((d) => {
-                const list = blocks.filter((b) => b.weekday === d.value);
-                return (
-                  <li key={d.value} className="flex flex-col gap-2 p-4 sm:flex-row sm:gap-6">
-                    <p className="w-28 shrink-0 font-medium text-slate-900">{d.label}</p>
-                    {list.length === 0 ? (
-                      <p className="text-sm text-slate-400">Off</p>
-                    ) : (
-                      <ul className="flex flex-1 flex-col gap-2">
-                        {list.map((b) => (
-                          <li
-                            key={b.id}
-                            className={`flex flex-col gap-1 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between ${
-                              b.is_active ? "border-slate-200" : "border-dashed border-slate-300 opacity-60"
-                            }`}
-                          >
-                            <div className="text-sm">
-                              <p className="font-semibold text-slate-900">
-                                {formatClock(b.start_time)} – {formatClock(b.end_time)}
-                                {!b.is_active && <span className="ml-2 text-xs font-normal text-slate-500">(paused)</span>}
-                              </p>
-                              <p className="text-slate-600">
-                                {CONSULTATION_TYPE_LABEL[b.consultation_type]}
-                                {b.chamber_id && ` · ${chamberName[b.chamber_id] ?? "Chamber"}`} ·{" "}
-                                {b.consultation_minutes} min · {slotsInBlock(b.start_time, b.end_time, b.consultation_minutes)} slots
-                              </p>
-                            </div>
-                            <div className="flex gap-1">
-                              <InlineAction
-                                action={toggleAvailability}
-                                fields={{ id: b.id, active: String(!b.is_active) }}
-                                label={b.is_active ? "Pause" : "Resume"}
-                                pendingLabel="Saving…"
-                              />
-                              <InlineAction
-                                action={deleteAvailability}
-                                fields={{ id: b.id }}
-                                label="Delete"
-                                pendingLabel="Deleting…"
-                                tone="danger"
-                                confirmText="Delete these hours?"
-                                ariaLabel={`Delete ${d.label} ${formatClock(b.start_time)} block`}
-                              />
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
+            <WeekEditor
+              blocks={blocks}
+              chambers={details.chambers.map((c) => ({ id: c.id, name: c.name }))}
+              offersOnline={profile.offers_online}
+              offersInPerson={profile.offers_in_person}
+            />
 
-            <div className="mt-6 rounded-xl border border-teal-200 bg-teal-50/40 p-4 sm:p-5">
-              <h3 className="mb-4 font-semibold text-slate-900">Add hours</h3>
+            <details className="group mt-6 rounded-xl border border-slate-200 p-4 sm:p-5">
+              <summary className="cursor-pointer list-none font-semibold text-slate-900 [&::-webkit-details-marker]:hidden">
+                <span className="mr-1 inline-block transition-transform group-open:rotate-90" aria-hidden="true">›</span>
+                Set up several days at once
+              </summary>
+              <div className="mt-4">
               <AvailabilityForm
                 chambers={details.chambers.map((c) => ({ id: c.id, name: c.name }))}
                 offersOnline={profile.offers_online}
                 offersInPerson={profile.offers_in_person}
               />
-            </div>
+              </div>
+            </details>
           </Card>
         </div>
         <div className="flex min-w-0 flex-col gap-6">

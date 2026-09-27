@@ -15,20 +15,36 @@ import { requireRole } from "@/lib/auth/guards";
 import { doctorPhotoUrl, formatFee } from "@/lib/doctor/constants";
 import { CONSULTATION_TYPE_LABEL } from "@/lib/schedule/constants";
 import { getAvailableSlots } from "@/lib/schedule/queries";
+import { PaymentPanel } from "@/components/payments/payment-panel";
+import { getPaymentSummary, getPlatformSettings } from "@/lib/payments/queries";
 
 export const metadata: Metadata = { title: "Appointment · MedLife" };
 
+const PAYMENT_NOTES: Record<string, { kind: "success" | "error"; text: string }> = {
+  paid: { kind: "success", text: "Payment received — your appointment is confirmed. A receipt is available below." },
+  refunding: {
+    kind: "error",
+    text: "Your payment arrived after the booking closed, so the slot couldn't be kept. A full refund has been started.",
+  },
+  failed: { kind: "error", text: "The payment didn't go through. You can try again before the deadline." },
+  cancelled: { kind: "error", text: "Payment was cancelled. You can try again before the deadline." },
+  error: { kind: "error", text: "We couldn't open the payment page. Please try again." },
+};
+
 export default async function PatientAppointmentPage({ params, searchParams }: PageProps<"/patient/appointments/[id]">) {
   const user = await requireRole("patient", "/patient/appointments");
-  const [{ id }, { booked }] = await Promise.all([params, searchParams]);
+  const [{ id }, { booked, payment: paymentParam }] = await Promise.all([params, searchParams]);
   const appt = /^[0-9a-f-]{36}$/i.test(id) ? await getAppointmentWithDoctor(id) : null;
   if (!appt || appt.patient_id !== user.id) notFound();
 
   const canChange = patientCanChange(appt.status, appt.slot_start);
-  const [events, slots] = await Promise.all([
+  const [events, slots, paymentSummary, settings] = await Promise.all([
     listEvents(appt.id),
     canChange ? getAvailableSlots(appt.doctor_id, { days: 14, asViewer: true }) : Promise.resolve([]),
+    getPaymentSummary(appt.id),
+    getPlatformSettings(),
   ]);
+  const paymentNote = PAYMENT_NOTES[typeof paymentParam === "string" ? paymentParam : ""];
   const sameTypeSlots = slots.filter((s) => s.consultation_type === appt.consultation_type);
   const zone = appt.doctor?.timezone;
 
@@ -37,6 +53,8 @@ export default async function PatientAppointmentPage({ params, searchParams }: P
       <Link href="/patient/appointments" className="text-sm font-medium text-teal-700 hover:underline">
         ← My appointments
       </Link>
+
+      {paymentNote && <Alert kind={paymentNote.kind}>{paymentNote.text}</Alert>}
 
       {booked === "1" && appt.status === "confirmed" && (
         <Alert kind="success">
@@ -73,7 +91,7 @@ export default async function PatientAppointmentPage({ params, searchParams }: P
                     : "Chamber"}
               </Row>
               <Row label="Fee">
-                {formatFee(appt.fee)} · {paymentLabel(appt.consultation_type, appt.payment_status)}
+                {formatFee(appt.fee)} · {paymentLabel(appt.payment_method, appt.payment_status, appt.status)}
               </Row>
               {appt.chamber?.phone && <Row label="Chamber phone">{appt.chamber.phone}</Row>}
               {appt.patient_note && <Row label="Your note">{appt.patient_note}</Row>}
@@ -98,6 +116,18 @@ export default async function PatientAppointmentPage({ params, searchParams }: P
         </div>
 
         <aside className="flex min-w-0 flex-col gap-6 @4xl:self-start">
+          {(appt.fee ?? 0) > 0 && (
+            <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+              <h2 className="mb-4 text-lg font-semibold text-slate-900">Payment</h2>
+              <PaymentPanel
+                appointment={appt}
+                summary={paymentSummary}
+                settings={settings}
+                showActions
+                receiptHref={`/patient/appointments/${appt.id}/receipt`}
+              />
+            </section>
+          )}
           {canChange ? (
             <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
               <h2 className="text-lg font-semibold text-slate-900">Cancel</h2>

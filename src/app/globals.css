@@ -53,3 +53,124 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--card-min, 16rem)), 1fr));
 }
+
+/* ===========================================================================
+ * Motion
+ * Short, soft animations (150–350ms, ease-out). Everything below is switched
+ * off for users who ask for reduced motion.
+ * ======================================================================== */
+
+@theme {
+  --ease-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --animate-fade-in: fade-in 200ms ease-out both;
+  --animate-fade-up: fade-up 350ms var(--ease-soft) both;
+  --animate-fade-down: fade-down 220ms var(--ease-soft) both;
+  --animate-scale-in: scale-in 180ms var(--ease-soft) both;
+  --animate-slide-in-left: slide-in-left 260ms var(--ease-soft) both;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      translate: 0 10px;
+    }
+  }
+  @keyframes fade-down {
+    from {
+      opacity: 0;
+      translate: 0 -6px;
+    }
+  }
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      scale: 0.97;
+    }
+  }
+  @keyframes slide-in-left {
+    from {
+      translate: -100% 0;
+    }
+  }
+}
+
+/* Gentle state changes on anything interactive. */
+@layer base {
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  summary {
+    transition-property: color, background-color, border-color, box-shadow, opacity, translate, scale;
+    transition-duration: 150ms;
+    transition-timing-function: ease-out;
+  }
+}
+
+/* Let <details> (FAQ, collapsible panels) open and close smoothly where supported. */
+:root {
+  interpolate-size: allow-keywords;
+}
+details::details-content {
+  block-size: 0;
+  overflow-y: clip;
+  transition:
+    block-size 260ms var(--ease-soft),
+    content-visibility 260ms allow-discrete;
+}
+details[open]::details-content {
+  block-size: auto;
+}
+
+/* ---- Page changes (React <ViewTransition>, see components/motion/page-transition.tsx) ---- */
+
+/* The page frame (sidebar, headers) swaps instantly; only content animates. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+::view-transition-old(.page-exit) {
+  animation: 120ms ease-in both vt-fade-out;
+}
+::view-transition-new(.page-enter) {
+  animation: 280ms var(--ease-soft) 60ms both vt-fade-up;
+}
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-fade-up {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+
+/* ---- Reduced motion: keep everything instant ---- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after,
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Public site header stays put while page content transitions. */
+::view-transition-group(site-header),
+::view-transition-old(site-header),
+::view-transition-new(site-header) {
+  animation: none;
+}

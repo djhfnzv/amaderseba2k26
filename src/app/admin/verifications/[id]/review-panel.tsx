@@ -59,7 +59,7 @@ export function ReviewPanel({ requestId, status }: { requestId: string; status: 
       )}
 
       {mode && (
-        <form action={action} className="flex flex-col gap-3" noValidate>
+        <form action={action} className="flex animate-fade-down flex-col gap-3" noValidate>
           <input type="hidden" name="requestId" value={requestId} />
           <input type="hidden" name="decision" value={mode} />
           <TextareaField

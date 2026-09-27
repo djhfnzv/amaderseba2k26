@@ -136,3 +136,62 @@ export async function deleteLeave(formData: FormData): Promise<void> {
   if (error) console.error("[deleteLeave]", error);
   await revalidateSchedule(user.id);
 }
+
+// -----------------------------------------------------------------------------
+// Edit one block in place
+// -----------------------------------------------------------------------------
+export async function updateAvailability(_prev: FormState, formData: FormData): Promise<FormState> {
+  const user = await requireRole("doctor");
+  const raw = formToObject(formData);
+  const id = raw.id ?? "";
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return { error: "Invalid block." };
+
+  // Same rules as adding; the block keeps its weekday.
+  const parsed = availabilitySchema.safeParse({ ...raw, weekdays: [raw.weekday] });
+  if (!parsed.success) return { fieldErrors: fieldErrorsOf(parsed.error), values: raw };
+  const v = parsed.data;
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("doctor_availability")
+    .update({
+      start_time: v.startTime,
+      end_time: v.endTime,
+      consultation_type: v.consultationType,
+      chamber_id: v.chamberId,
+      consultation_minutes: v.consultationMinutes,
+    })
+    .eq("id", id)
+    .eq("doctor_id", user.id);
+  if (error) {
+    if (error.code === "23P01") return { error: "This time overlaps another block on the same day.", values: raw };
+    if (error.code === "22023") return { error: error.message, values: raw };
+    console.error("[updateAvailability]", error);
+    return { error: "Could not save. Please try again.", values: raw };
+  }
+
+  await revalidateSchedule(user.id);
+  return { message: "Saved." };
+}
+
+// -----------------------------------------------------------------------------
+// Copy one day's hours to other days (replaces what those days had)
+// -----------------------------------------------------------------------------
+export async function copyDay(_prev: FormState, formData: FormData): Promise<FormState> {
+  const user = await requireRole("doctor");
+  const from = Number(formData.get("from"));
+  const to = formData.getAll("to").map(Number).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6 && d !== from);
+  if (!Number.isInteger(from) || from < 0 || from > 6) return { error: "Invalid day." };
+  if (to.length === 0) return { error: "Choose at least one day to copy to." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("copy_availability_day", { p_from: from, p_to: to });
+  if (error) {
+    const expected = ["22023", "23P01", "42501"].includes(error.code ?? "");
+    if (!expected) console.error("[copyDay]", error);
+    return { error: expected ? error.message : "Could not copy. Please try again." };
+  }
+
+  await revalidateSchedule(user.id);
+  return { message: `Copied to ${to.length} day${to.length === 1 ? "" : "s"}.` };
+}

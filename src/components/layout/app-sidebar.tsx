@@ -95,7 +95,7 @@ export function AppSidebar({ nav, userName, roleLabel }: Props) {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-slate-200 bg-white lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-slate-200 bg-white lg:flex print:hidden">
         <div className="flex h-16 items-center px-5">
           <Logo />
         </div>
@@ -108,7 +108,7 @@ export function AppSidebar({ nav, userName, roleLabel }: Props) {
       </aside>
 
       {/* Mobile / tablet top bar */}
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur lg:hidden">
+      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur lg:hidden print:hidden">
         <Logo />
         <button
           type="button"
@@ -131,9 +131,9 @@ export function AppSidebar({ nav, userName, roleLabel }: Props) {
             type="button"
             aria-label="Close menu"
             onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-slate-900/30"
+            className="absolute inset-0 animate-fade-in bg-slate-900/30"
           />
-          <div id="mobile-menu" className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col bg-white shadow-xl">
+          <div id="mobile-menu" className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] animate-slide-in-left flex-col bg-white shadow-xl">
             <div className="flex h-14 items-center justify-between px-4">
               <Logo />
               <button
