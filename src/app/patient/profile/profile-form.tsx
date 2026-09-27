@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { saveHealthProfile } from "../actions";
-import { TagInput } from "@/components/patient/tag-input";
+import { TagInput } from "@/components/ui/tag-input";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";

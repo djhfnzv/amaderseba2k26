@@ -1,7 +1,6 @@
 "use client";
 
 import { useId, useState, type KeyboardEvent } from "react";
-import { MAX_TAG_LENGTH, MAX_TAGS } from "@/lib/patient/constants";
 
 /**
  * Free-text chip input with suggestions. Submits one hidden input per tag
@@ -15,6 +14,8 @@ export function TagInput({
   placeholder,
   hint,
   errors,
+  maxTags = 30,
+  maxLength = 60,
 }: {
   label: string;
   name: string;
@@ -23,6 +24,8 @@ export function TagInput({
   placeholder?: string;
   hint?: string;
   errors?: string[];
+  maxTags?: number;
+  maxLength?: number;
 }) {
   const id = useId();
   const [tags, setTags] = useState<string[]>(defaultValue);
@@ -32,8 +35,8 @@ export function TagInput({
   const has = (value: string) => tags.some((t) => t.toLowerCase() === value.toLowerCase());
 
   function add(value: string) {
-    const tag = value.trim().replace(/\s+/g, " ").slice(0, MAX_TAG_LENGTH);
-    if (!tag || has(tag) || tags.length >= MAX_TAGS) return;
+    const tag = value.trim().replace(/\s+/g, " ").slice(0, maxLength);
+    if (!tag || has(tag) || tags.length >= maxTags) return;
     setTags((prev) => [...prev, tag]);
   }
 
@@ -94,7 +97,7 @@ export function TagInput({
             setDraft("");
           }}
           placeholder={tags.length ? "" : placeholder}
-          maxLength={MAX_TAG_LENGTH}
+          maxLength={maxLength}
           aria-describedby={hasError ? `${id}-error` : `${id}-hint`}
           className="h-8 min-w-32 flex-1 bg-transparent px-1 text-base text-slate-900 outline-none"
         />

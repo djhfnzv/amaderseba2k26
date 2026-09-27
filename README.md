@@ -30,7 +30,8 @@ with your email in the SQL editor. Log out and back in.
 |---|---|---|
 | `feature/landing-page` | Project scaffold + public landing page | ✅ merged |
 | `feature/m1-auth` | M1 Authentication & Role Management | ✅ merged |
-| `feature/m2-patient-profile` | M2 Patient Profile & Medical Records | ✅ |
+| `feature/m2-patient-profile` | M2 Patient Profile & Medical Records | ✅ merged |
+| `feature/m3-doctor-portfolio` | M3 Doctor Portfolio | ✅ |
 
 ## M1 — Authentication & roles
 
@@ -56,6 +57,20 @@ with your email in the SQL editor. Log out and back in.
   type and size before saving it. Files are opened through links that expire after 60 seconds.
 - **Access:** patients see only their own data (RLS on tables and storage). Doctor access for
   booked patients comes with M7; access logging with M14.
+
+## M3 — Doctor portfolio
+
+- **Editor** (`/doctor/portfolio`): photo, name, headline, bio, license number, practicing-since
+  year, specialties (up to 5), languages, online / in-person fees (৳), and repeatable sections
+  for education, experience, chambers, publications and awards.
+- **Public page** (`/doctors/[slug]`): server-rendered with meta tags, Open Graph and
+  schema.org `Physician` JSON-LD. The address is generated from the name and editable.
+- **Visibility:** only **verified** doctors with active accounts are public. A doctor can always
+  preview their own page (never indexed). Doctors cannot verify themselves (DB trigger).
+- **Until M4:** verify a doctor for testing with
+  [`supabase/seed/verify_doctor.sql`](supabase/seed/verify_doctor.sql).
+- **Photos:** public bucket `doctor-photos` (2 MB, JPG/PNG/WebP), same signed-upload +
+  server-check flow as M2.
 
 ## Project layout
 
