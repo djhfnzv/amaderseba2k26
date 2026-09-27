@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Facets } from "@/lib/search/queries";
-import { SORT_OPTIONS, TYPE_OPTIONS, type SearchFilters } from "@/lib/search/params";
+import { AVAILABILITY_OPTIONS, SORT_OPTIONS, TYPE_OPTIONS, type SearchFilters } from "@/lib/search/params";
 import { FiltersPanel } from "./filters-panel";
 
 const inputClass =
@@ -14,6 +14,7 @@ export function SearchFiltersForm({ filters, facets }: { filters: SearchFilters;
     filters.minFee != null || filters.maxFee != null,
     filters.language,
     filters.city,
+    filters.available,
   ].filter(Boolean).length;
 
   return (
@@ -34,6 +35,14 @@ export function SearchFiltersForm({ filters, facets }: { filters: SearchFilters;
           {TYPE_OPTIONS.map((t) => (
             <option key={t.value} value={t.value}>
               {t.label}
+            </option>
+          ))}
+        </Select>
+
+        <Select label="Available" name="available" value={filters.available ? String(filters.available) : ""} placeholder="Any time">
+          {AVAILABILITY_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
             </option>
           ))}
         </Select>

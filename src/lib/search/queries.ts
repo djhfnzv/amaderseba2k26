@@ -31,6 +31,7 @@ export async function searchDoctors(f: SearchFilters): Promise<SearchResult> {
     p_sort: f.sort,
     p_limit: PAGE_SIZE,
     p_offset: (f.page - 1) * PAGE_SIZE,
+    p_available_days: f.available,
   });
   if (error) {
     console.error("[searchDoctors]", describeError(error));

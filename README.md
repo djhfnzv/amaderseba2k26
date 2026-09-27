@@ -34,7 +34,8 @@ with your email in the SQL editor. Log out and back in.
 | `feature/m3-doctor-portfolio` | M3 Doctor Portfolio | ✅ merged |
 | `feature/m4-doctor-verification` | M4 Doctor Verification | ✅ merged |
 | `feature/m5-search` | M5 Search & Discovery | ✅ merged |
-| `feature/m6-schedule` | M6 Schedule Engine | ✅ |
+| `feature/m6-schedule` | M6 Schedule Engine | ✅ merged |
+| `feature/m7-booking` | M7 Appointments & Booking | ✅ |
 
 ## M1 — Authentication & roles
 
@@ -111,6 +112,26 @@ with your email in the SQL editor. Log out and back in.
   shown in the **viewer's** time zone. Booking itself arrives in M7.
 - Hours and leave are stored in the doctor's local time; `get_available_slots()` returns UTC.
   The DB refuses overlapping blocks and blocks at another doctor's chamber.
+
+## M7 — Appointments & booking
+
+- **Booking (≤ 4 steps):** pick type → pick slot on the doctor's page → (log in) → confirm.
+  The slot is **held for 5 minutes** while the patient confirms (`/patient/book/[holdId]`), then the
+  appointment is **confirmed automatically**. Until payments (M8), in-person visits are paid at the
+  chamber and online visits show "payment due".
+- **Rules:** one upcoming appointment per patient per doctor; patients can cancel or reschedule
+  up to **2 hours** before; doctors can cancel any time with a reason the patient sees.
+- **No double booking (NFR-04):** unique index on (doctor, start time) for live appointments, a
+  per-doctor lock in every booking function, and booked/held slots removed from availability.
+- **Patient:** `/patient/appointments` (upcoming, past), detail page with reschedule, cancel and
+  history; upcoming visits on the dashboard.
+- **Doctor:** `/doctor/appointments` (Today queue with serial numbers / Upcoming / Past); detail page
+  with the patient's **health profile and reports** (FR-D-07: only for patients who booked them),
+  start / complete / no-show, reschedule, cancel; today's count on the dashboard.
+- **Search:** "Next available" on doctor cards, an **Available** filter (today / 3 days / week) and a
+  **Available soonest** sort.
+- All changes go through DB functions (`hold_slot`, `confirm_booking`, `cancel_appointment`,
+  `reschedule_appointment`, `update_appointment_status`) and are logged in `appointment_events`.
 
 ## Project layout
 

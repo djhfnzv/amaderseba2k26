@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AppointmentList } from "@/components/appointments/patient-appointment-list";
 import { FileList } from "@/components/patient/file-list";
+import { listPatientAppointments } from "@/lib/appointments/queries";
 import { requireRole } from "@/lib/auth/guards";
 import { ageFromDob } from "@/lib/format";
 import { getHealthProfile, listMedicalFiles, profileCompleteness } from "@/lib/patient/queries";
@@ -11,9 +13,10 @@ export const metadata: Metadata = { title: "Dashboard · MedLife" };
 
 export default async function PatientDashboard() {
   const user = await requireRole("patient", "/patient");
-  const [profile, recentFiles] = await Promise.all([
+  const [profile, recentFiles, appointments] = await Promise.all([
     getHealthProfile(user.id),
     listMedicalFiles(3),
+    listPatientAppointments(user.id, 50),
   ]);
   const { percent, missing } = profileCompleteness(profile);
 
@@ -52,11 +55,23 @@ export default async function PatientDashboard() {
         </section>
       </div>
 
-      <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-5 sm:p-6">
-        <h2 className="text-sm font-semibold text-slate-900">Coming soon</h2>
-        <p className="mt-1 text-sm text-slate-600">
-          Find and book doctors, upcoming appointments and your prescriptions.
-        </p>
+      <section>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-slate-900">Upcoming appointments</h2>
+          <Link href="/patient/appointments" className="text-sm font-medium text-teal-700 hover:underline">
+            All appointments
+          </Link>
+        </div>
+        {appointments.upcoming.length ? (
+          <AppointmentList items={appointments.upcoming.slice(0, 3)} empty="" />
+        ) : (
+          <div className="flex flex-col items-start gap-3 rounded-2xl border border-dashed border-slate-300 bg-white p-5 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-slate-600">No upcoming appointments.</p>
+            <Link href="/doctors" className="inline-flex h-10 items-center rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white hover:bg-teal-800">
+              Find a doctor
+            </Link>
+          </div>
+        )}
       </section>
     </div>
   );

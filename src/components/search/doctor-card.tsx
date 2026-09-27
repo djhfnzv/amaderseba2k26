@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { DoctorAvatar } from "@/components/doctor/doctor-avatar";
+import { LocalTime } from "@/components/ui/local-time";
 import { doctorPhotoUrl, formatFee, yearsOfExperience } from "@/lib/doctor/constants";
 import type { DoctorSearchRow } from "@/types/database";
 
@@ -57,6 +58,16 @@ export function DoctorCard({ doctor }: { doctor: DoctorSearchRow }) {
         )}
       </dl>
 
+      <p className="mt-3 text-sm">
+        {doctor.next_available ? (
+          <span className="font-medium text-emerald-700">
+            Next available: <LocalTime iso={doctor.next_available} format="dateTime" />
+          </span>
+        ) : (
+          <span className="text-slate-500">No open slots in the next 30 days</span>
+        )}
+      </p>
+
       <div className="mt-auto pt-4">
         <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-4 text-sm">
           {doctor.offers_online && (
@@ -74,7 +85,7 @@ export function DoctorCard({ doctor }: { doctor: DoctorSearchRow }) {
           href={href}
           className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-lg bg-teal-700 text-sm font-semibold text-white hover:bg-teal-800"
         >
-          View profile
+          {doctor.next_available ? "View profile & book" : "View profile"}
         </Link>
       </div>
     </article>
