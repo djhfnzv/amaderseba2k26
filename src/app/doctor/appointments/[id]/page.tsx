@@ -5,6 +5,8 @@ import { CancelForm } from "@/components/appointments/cancel-form";
 import { AppointmentHistory } from "@/components/appointments/history";
 import { StatusActions } from "@/components/appointments/status-actions";
 import { JoinCard } from "@/components/consult/join-card";
+import { AdviceForm, StartPrescriptionButton } from "@/components/prescriptions/advice";
+import { AdviceList, PrescriptionList } from "@/components/prescriptions/rx-lists";
 import { AppointmentStatusPill } from "@/components/appointments/status-pill";
 import { SlotPicker } from "@/components/schedule/slot-picker";
 import { LocalTime } from "@/components/ui/local-time";
@@ -16,6 +18,7 @@ import { formatFee } from "@/lib/doctor/constants";
 import { getOrCreateOwnProfile, getPortfolioDetails } from "@/lib/doctor/queries";
 import { ageFromDob, formatBytes, formatDate } from "@/lib/format";
 import { FILE_CATEGORY_LABEL, SEX_OPTIONS } from "@/lib/patient/constants";
+import { listAdvice, listForAppointment } from "@/lib/prescriptions/queries";
 import { CONSULTATION_TYPE_LABEL } from "@/lib/schedule/constants";
 import { getAvailableSlots } from "@/lib/schedule/queries";
 
@@ -29,10 +32,13 @@ export default async function DoctorAppointmentPage({ params }: PageProps<"/doct
 
   const profile = await getOrCreateOwnProfile(user);
   const live = isLive(appt.status);
-  const [slots, details] = await Promise.all([
+  const [slots, details, prescriptions, advice] = await Promise.all([
     live ? getAvailableSlots(user.id, { days: 14, asViewer: true }) : Promise.resolve([]),
     getPortfolioDetails(user.id),
+    listForAppointment(appt.id),
+    listAdvice({ appointmentId: appt.id }),
   ]);
+  const canTreat = appt.status !== "cancelled" && appt.status !== "expired";
   const hp = appt.profile;
   const age = ageFromDob(hp?.date_of_birth ?? null);
   const sex = SEX_OPTIONS.find((s) => s.value === hp?.sex)?.label;
@@ -76,6 +82,37 @@ export default async function DoctorAppointmentPage({ params }: PageProps<"/doct
                 <StatusActions appointmentId={appt.id} status={appt.status} online={appt.consultation_type === "online"} />
               </div>
             )}
+          </Card>
+
+          <Card title="Prescription & advice">
+            <div className="flex flex-col gap-5">
+              <div className="flex flex-col gap-3">
+                <PrescriptionList
+                  rows={prescriptions}
+                  hrefBase="/doctor/prescriptions"
+                  zone={tz}
+                  empty="No prescription for this visit yet."
+                />
+                {canTreat && (
+                  <StartPrescriptionButton
+                    appointmentId={appt.id}
+                    label={prescriptions.some((p) => p.status === "draft") ? "Continue draft" : prescriptions.length ? "Write another prescription" : "Write prescription"}
+                  />
+                )}
+                {appt.consultation_type === "online" && canTreat && (
+                  <p className="text-xs text-slate-500">Online visit: your consultation notes are copied in, and controlled drugs are blocked.</p>
+                )}
+              </div>
+              <div className="border-t border-slate-200 pt-5">
+                <h3 className="mb-3 font-semibold text-slate-900">Advice without a prescription</h3>
+                <AdviceList rows={advice} zone={tz} empty="No advice sent for this visit." />
+                {canTreat && (
+                  <div className="mt-4">
+                    <AdviceForm patientId={appt.patient_id} appointmentId={appt.id} />
+                  </div>
+                )}
+              </div>
+            </div>
           </Card>
 
           <Card title="Health profile">

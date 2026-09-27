@@ -14,6 +14,8 @@ export type NavIcon =
   | "wallet"
   | "banknote"
   | "cog"
+  | "rx"
+  | "pill"
   | "external";
 
 const paths: Record<NavIcon, React.ReactNode> = {
@@ -80,6 +82,18 @@ const paths: Record<NavIcon, React.ReactNode> = {
     <>
       <circle cx="12" cy="12" r="3" />
       <path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M6 18l1.4-1.4M16.6 7.4 18 6" />
+    </>
+  ),
+  rx: (
+    <>
+      <rect x="5" y="4" width="14" height="17" rx="2" />
+      <path d="M9 3h6v3H9zM9 10.5v6M9 10.5h2.2a1.7 1.7 0 0 1 0 3.4H9M11 13.9l3 2.6M14 13.5l-2.6 3" />
+    </>
+  ),
+  pill: (
+    <>
+      <rect x="3.5" y="8.5" width="17" height="7" rx="3.5" transform="rotate(-45 12 12)" />
+      <path d="m9.5 9.5 5 5" />
     </>
   ),
   external: <path d="M14 4h6v6M20 4l-8.5 8.5M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />,

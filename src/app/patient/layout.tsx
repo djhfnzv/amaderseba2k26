@@ -9,6 +9,7 @@ export default async function PatientLayout({ children }: LayoutProps<"/patient"
       nav={[
         { href: "/patient", label: "Dashboard", icon: "home", exact: true },
         { href: "/patient/appointments", label: "Appointments", icon: "calendar" },
+        { href: "/patient/prescriptions", label: "Prescriptions", icon: "rx" },
         { href: "/patient/profile", label: "Health profile", icon: "heart" },
         { href: "/patient/records", label: "Medical records", icon: "file" },
         { href: "/patient/doctors", label: "Find a doctor", icon: "search" },

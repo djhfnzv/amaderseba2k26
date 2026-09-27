@@ -18,6 +18,8 @@ import { getAvailableSlots } from "@/lib/schedule/queries";
 import { PaymentPanel } from "@/components/payments/payment-panel";
 import { JoinCard } from "@/components/consult/join-card";
 import { getPaymentSummary, getPlatformSettings } from "@/lib/payments/queries";
+import { AdviceList, PrescriptionList } from "@/components/prescriptions/rx-lists";
+import { listAdvice, listForAppointment } from "@/lib/prescriptions/queries";
 
 export const metadata: Metadata = { title: "Appointment · MedLife" };
 
@@ -39,11 +41,13 @@ export default async function PatientAppointmentPage({ params, searchParams }: P
   if (!appt || appt.patient_id !== user.id) notFound();
 
   const canChange = patientCanChange(appt.status, appt.slot_start);
-  const [events, slots, paymentSummary, settings] = await Promise.all([
+  const [events, slots, paymentSummary, settings, prescriptions, advice] = await Promise.all([
     listEvents(appt.id),
     canChange ? getAvailableSlots(appt.doctor_id, { days: 14, asViewer: true }) : Promise.resolve([]),
     getPaymentSummary(appt.id),
     getPlatformSettings(),
+    listForAppointment(appt.id),
+    listAdvice({ appointmentId: appt.id }),
   ]);
   const paymentNote = PAYMENT_NOTES[typeof paymentParam === "string" ? paymentParam : ""];
   const sameTypeSlots = slots.filter((s) => s.consultation_type === appt.consultation_type);
@@ -87,7 +91,7 @@ export default async function PatientAppointmentPage({ params, searchParams }: P
               <Row label="Type">{CONSULTATION_TYPE_LABEL[appt.consultation_type]}</Row>
               <Row label="Where">
                 {appt.consultation_type === "online"
-                  ? "Video call — the join button appears here 10 minutes before the start (coming with M9)"
+                  ? "Video call on MedLife — the join button appears above shortly before the start"
                   : appt.chamber
                     ? `${appt.chamber.name}, ${appt.chamber.address}, ${appt.chamber.city}`
                     : "Chamber"}
@@ -100,6 +104,22 @@ export default async function PatientAppointmentPage({ params, searchParams }: P
               {appt.status === "cancelled" && appt.cancel_reason && <Row label="Cancellation reason">{appt.cancel_reason}</Row>}
             </dl>
           </section>
+
+          {(prescriptions.length > 0 || advice.length > 0 || appt.status === "completed") && (
+            <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+              <h2 className="mb-4 text-lg font-semibold text-slate-900">Prescription & advice</h2>
+              <div className="flex flex-col gap-5">
+                <PrescriptionList
+                  rows={prescriptions}
+                  hrefBase="/patient/prescriptions"
+                  zone={zone ?? "Asia/Dhaka"}
+                  showDoctor
+                  empty="Your doctor hasn't shared a prescription for this visit yet."
+                />
+                {advice.length > 0 && <AdviceList rows={advice} zone={zone ?? "Asia/Dhaka"} empty="" />}
+              </div>
+            </section>
+          )}
 
           {canChange && (
             <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
