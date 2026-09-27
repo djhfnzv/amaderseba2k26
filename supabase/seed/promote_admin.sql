@@ -5,4 +5,4 @@
 
 update public.users
    set role = 'admin'
- where email = 'admin@example.com';
+ where email = 'admin@teckpal.com';

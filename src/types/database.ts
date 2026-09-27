@@ -55,6 +55,94 @@ type MedicalFileRow = {
   created_at: string;
 };
 
+type SpecialtyRow = {
+  id: number;
+  slug: string;
+  name: string;
+  description: string | null;
+  is_active: boolean;
+  created_at: string;
+};
+
+type DoctorProfileRow = {
+  user_id: string;
+  slug: string;
+  display_name: string;
+  headline: string | null;
+  bio: string | null;
+  photo_path: string | null;
+  license_number: string | null;
+  practice_since_year: number | null;
+  languages: string[];
+  offers_online: boolean;
+  offers_in_person: boolean;
+  fee_online: number | null;
+  fee_in_person: number | null;
+  is_verified: boolean;
+  verified_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type DoctorSpecialtyRow = { doctor_id: string; specialty_id: number; is_primary: boolean };
+
+type DoctorEducationRow = {
+  id: string;
+  doctor_id: string;
+  degree: string;
+  institution: string;
+  year: number | null;
+  created_at: string;
+};
+
+type DoctorExperienceRow = {
+  id: string;
+  doctor_id: string;
+  position: string;
+  organization: string;
+  start_year: number;
+  end_year: number | null;
+  created_at: string;
+};
+
+type DoctorChamberRow = {
+  id: string;
+  doctor_id: string;
+  name: string;
+  address: string;
+  city: string;
+  visiting_hours: string | null;
+  phone: string | null;
+  created_at: string;
+};
+
+type DoctorPublicationRow = {
+  id: string;
+  doctor_id: string;
+  title: string;
+  publisher: string | null;
+  year: number | null;
+  url: string | null;
+  created_at: string;
+};
+
+type DoctorAwardRow = {
+  id: string;
+  doctor_id: string;
+  title: string;
+  issuer: string | null;
+  year: number | null;
+  created_at: string;
+};
+
+/** Standard shape for a child table: id/doctor_id/created_at are DB-filled. */
+type ChildTable<R extends { id: string; doctor_id: string; created_at: string }> = {
+  Row: R;
+  Insert: Omit<R, "id" | "doctor_id" | "created_at"> & { doctor_id?: string };
+  Update: Partial<Omit<R, "id" | "doctor_id" | "created_at">>;
+  Relationships: [];
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -90,11 +178,36 @@ export type Database = {
         Update: never;
         Relationships: [];
       };
+      specialties: {
+        Row: SpecialtyRow;
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      doctor_profiles: {
+        Row: DoctorProfileRow;
+        Insert: Pick<DoctorProfileRow, "user_id" | "slug" | "display_name"> &
+          Partial<Omit<DoctorProfileRow, "user_id" | "slug" | "display_name">>;
+        Update: Partial<Omit<DoctorProfileRow, "user_id" | "created_at" | "updated_at">>;
+        Relationships: [];
+      };
+      doctor_specialties: {
+        Row: DoctorSpecialtyRow;
+        Insert: DoctorSpecialtyRow;
+        Update: Partial<DoctorSpecialtyRow>;
+        Relationships: [];
+      };
+      doctor_education: ChildTable<DoctorEducationRow>;
+      doctor_experience: ChildTable<DoctorExperienceRow>;
+      doctor_chambers: ChildTable<DoctorChamberRow>;
+      doctor_publications: ChildTable<DoctorPublicationRow>;
+      doctor_awards: ChildTable<DoctorAwardRow>;
     };
     Views: { [_ in never]: never };
     Functions: {
       current_user_role: { Args: Record<string, never>; Returns: string };
       is_admin: { Args: Record<string, never>; Returns: boolean };
+      doctor_is_public: { Args: { doctor: string }; Returns: boolean };
     };
     Enums: { account_status: AccountStatus };
     CompositeTypes: { [_ in never]: never };
@@ -104,3 +217,10 @@ export type Database = {
 export type AppUser = UserRow;
 export type PatientProfile = PatientProfileRow;
 export type MedicalFile = MedicalFileRow;
+export type Specialty = SpecialtyRow;
+export type DoctorProfile = DoctorProfileRow;
+export type DoctorEducation = DoctorEducationRow;
+export type DoctorExperience = DoctorExperienceRow;
+export type DoctorChamber = DoctorChamberRow;
+export type DoctorPublication = DoctorPublicationRow;
+export type DoctorAward = DoctorAwardRow;
