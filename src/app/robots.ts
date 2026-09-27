@@ -16,6 +16,7 @@ export default function robots(): MetadataRoute.Robots {
         "/dashboard",
         "/auth/",
         "/verification-documents/",
+        "/medical-files/",
         "/reset-password",
         "/suspended",
       ],

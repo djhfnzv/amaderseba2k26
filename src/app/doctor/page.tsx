@@ -5,6 +5,7 @@ import { VerificationBadge } from "@/components/doctor/verification-badge";
 import { requireRole } from "@/lib/auth/guards";
 import { doctorPhotoUrl } from "@/lib/doctor/constants";
 import { getOwnRequest } from "@/lib/verification/queries";
+import { countTodayQueue } from "@/lib/appointments/queries";
 import {
   getOrCreateOwnProfile,
   getPortfolioDetails,
@@ -16,7 +17,11 @@ export const metadata: Metadata = { title: "Doctor dashboard · MedLife" };
 export default async function DoctorDashboard() {
   const user = await requireRole("doctor", "/doctor");
   const profile = await getOrCreateOwnProfile(user);
-  const [details, request] = await Promise.all([getPortfolioDetails(user.id), getOwnRequest(user.id)]);
+  const [details, request, todayCount] = await Promise.all([
+    getPortfolioDetails(user.id),
+    getOwnRequest(user.id),
+    countTodayQueue(user.id, profile.timezone),
+  ]);
   const checklist = portfolioChecklist({ profile, ...details });
   const done = checklist.filter((c) => c.done).length;
   const percent = Math.round((done / checklist.length) * 100);
@@ -87,12 +92,21 @@ export default async function DoctorDashboard() {
         </ul>
       </section>
 
-      <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-5 sm:p-6">
-        <h2 className="text-sm font-semibold text-slate-900">Coming soon</h2>
-        <p className="mt-1 text-sm text-slate-600">
-          Appointments, patient queue and prescriptions.
-        </p>
-      </section>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Link
+          href="/doctor/appointments?view=today"
+          className={`rounded-2xl border p-5 transition-shadow hover:shadow-md ${todayCount ? "border-teal-300 bg-teal-50" : "border-slate-200 bg-white"}`}
+        >
+          <p className="text-sm font-medium text-slate-600">Today&apos;s queue</p>
+          <p className="mt-1 text-3xl font-bold text-slate-900">{todayCount}</p>
+          <p className="mt-2 text-sm font-semibold text-teal-700">Open queue →</p>
+        </Link>
+        <Link href="/doctor/schedule" className="rounded-2xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-md">
+          <p className="text-sm font-medium text-slate-600">Schedule</p>
+          <p className="mt-1 text-lg font-semibold text-slate-900">Weekly hours & leave</p>
+          <p className="mt-2 text-sm font-semibold text-teal-700">Manage →</p>
+        </Link>
+      </div>
     </div>
   );
 }

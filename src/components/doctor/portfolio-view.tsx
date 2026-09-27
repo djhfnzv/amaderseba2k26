@@ -1,4 +1,5 @@
 import { SlotPicker } from "@/components/schedule/slot-picker";
+import { startBooking } from "@/lib/appointments/actions";
 import type { AvailableSlot } from "@/types/database";
 import { DoctorAvatar } from "./doctor-avatar";
 import {
@@ -10,7 +11,16 @@ import {
 import type { Portfolio } from "@/lib/doctor/queries";
 
 /** The public portfolio page body (also used for the doctor's own preview). */
-export function PortfolioView({ portfolio, slots }: { portfolio: Portfolio; slots: AvailableSlot[] }) {
+export function PortfolioView({
+  portfolio,
+  slots,
+  bookable,
+}: {
+  portfolio: Portfolio;
+  slots: AvailableSlot[];
+  /** False for an unverified doctor's own preview. */
+  bookable: boolean;
+}) {
   const { profile, specialties, education, experience, chambers, publications, awards } = portfolio;
   const years = yearsOfExperience(profile.practice_since_year);
   const degrees = education.map((e) => e.degree).join(", ");
@@ -111,12 +121,21 @@ export function PortfolioView({ portfolio, slots }: { portfolio: Portfolio; slot
 
         {(profile.offers_online || profile.offers_in_person) && (
           <section className="rounded-2xl border border-slate-200 bg-white p-6">
-            <h2 className="text-lg font-semibold text-slate-900">Available slots</h2>
+            <h2 className="text-lg font-semibold text-slate-900">Book an appointment</h2>
             <div className="mt-4">
               <SlotPicker
                 slots={slots}
                 chamberNames={Object.fromEntries(chambers.map((c) => [c.id, c.name]))}
-                note="Online booking opens soon. Meanwhile, call the chamber for a serial."
+                select={
+                  bookable
+                    ? { action: startBooking, hidden: { doctorId: profile.user_id, slug: profile.slug }, verb: "Book" }
+                    : undefined
+                }
+                note={
+                  bookable
+                    ? "We hold your slot for 5 minutes while you confirm. In-person visits are paid at the chamber."
+                    : "Booking is enabled once your profile is verified."
+                }
                 emptyText="No open slots in the next 7 days."
               />
             </div>

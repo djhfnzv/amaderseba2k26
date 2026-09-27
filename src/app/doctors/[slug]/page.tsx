@@ -99,7 +99,7 @@ export default async function DoctorPublicPage({ params }: PageProps<"/doctors/[
         </div>
       )}
       <main className="flex-1 bg-slate-50">
-        <PortfolioView portfolio={portfolio} slots={slots} />
+        <PortfolioView portfolio={portfolio} slots={slots} bookable={!isPreview} />
       </main>
       <EmergencyNotice />
       <SiteFooter />

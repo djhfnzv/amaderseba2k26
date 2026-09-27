@@ -4,10 +4,17 @@ export const PAGE_SIZE = 12;
 
 export const SORT_OPTIONS: { value: DoctorSearchSort; label: string }[] = [
   { value: "relevance", label: "Best match" },
+  { value: "soonest", label: "Available soonest" },
   { value: "fee_asc", label: "Fee: low to high" },
   { value: "fee_desc", label: "Fee: high to low" },
   { value: "experience", label: "Most experienced" },
 ];
+
+export const AVAILABILITY_OPTIONS = [
+  { value: 1, label: "Today" },
+  { value: 3, label: "Within 3 days" },
+  { value: 7, label: "Within a week" },
+] as const;
 
 export const TYPE_OPTIONS = [
   { value: "online", label: "Online (video)" },
@@ -22,6 +29,7 @@ export type SearchFilters = {
   maxFee: number | null;
   language: string;
   city: string;
+  available: number | null;
   sort: DoctorSearchSort;
   page: number;
 };
@@ -53,6 +61,7 @@ export function parseFilters(raw: RawParams): SearchFilters {
     maxFee,
     language: first(raw.language).trim().slice(0, 40),
     city: first(raw.city).trim().slice(0, 80),
+    available: AVAILABILITY_OPTIONS.some((o) => String(o.value) === first(raw.available)) ? Number(first(raw.available)) : null,
     sort: SORT_OPTIONS.some((o) => o.value === sort) ? sort : "relevance",
     page: Number.isFinite(page) && page >= 1 && page <= 500 ? page : 1,
   };
@@ -68,6 +77,7 @@ export function searchUrl(filters: Partial<SearchFilters>): string {
   if (filters.maxFee != null) p.set("maxFee", String(filters.maxFee));
   if (filters.language) p.set("language", filters.language);
   if (filters.city) p.set("city", filters.city);
+  if (filters.available) p.set("available", String(filters.available));
   if (filters.sort && filters.sort !== "relevance") p.set("sort", filters.sort);
   if (filters.page && filters.page > 1) p.set("page", String(filters.page));
   const qs = p.toString();
@@ -75,5 +85,5 @@ export function searchUrl(filters: Partial<SearchFilters>): string {
 }
 
 export function hasActiveFilters(f: SearchFilters): boolean {
-  return !!(f.q || f.specialty || f.type || f.minFee != null || f.maxFee != null || f.language || f.city);
+  return !!(f.q || f.specialty || f.type || f.minFee != null || f.maxFee != null || f.language || f.city || f.available);
 }
