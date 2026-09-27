@@ -6,7 +6,16 @@ import { Alert } from "@/components/ui/alert";
 import type { AppointmentStatus } from "@/types/database";
 
 /** Doctor buttons: start / complete / no-show. The DB enforces timing rules. */
-export function StatusActions({ appointmentId, status }: { appointmentId: string; status: AppointmentStatus }) {
+export function StatusActions({
+  appointmentId,
+  status,
+  online = false,
+}: {
+  appointmentId: string;
+  status: AppointmentStatus;
+  /** Online visits start by joining the video room instead. */
+  online?: boolean;
+}) {
   const [state, action, pending] = useActionState(updateAppointmentStatus, undefined);
   const btn = "h-10 rounded-lg px-4 text-sm font-semibold disabled:opacity-50";
 
@@ -16,7 +25,7 @@ export function StatusActions({ appointmentId, status }: { appointmentId: string
       {state?.error && <Alert>{state.error}</Alert>}
       {state?.message && <Alert kind="success">{state.message}</Alert>}
       <div className="flex flex-wrap gap-2">
-        {status === "confirmed" && (
+        {status === "confirmed" && !online && (
           <button type="submit" name="action" value="start" disabled={pending} className={`${btn} bg-teal-700 text-white hover:bg-teal-800`}>
             Start consultation
           </button>

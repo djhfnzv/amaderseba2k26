@@ -46,3 +46,15 @@ export const isLive = (s: AppointmentStatus) => s === "pending_payment" || s ===
 export function patientCanChange(status: AppointmentStatus, slotStart: string, now = Date.now()): boolean {
   return isLive(status) && new Date(slotStart).getTime() - now >= PATIENT_CHANGE_CUTOFF_HOURS * 3600_000;
 }
+
+/** Video room window: opens 10 min before the start, closes 30 min after the end. */
+export function consultWindow(
+  appt: { consultation_type: string; status: AppointmentStatus; slot_start: string; slot_end: string },
+  now = Date.now(),
+): "none" | "upcoming" | "open" | "closed" {
+  if (appt.consultation_type !== "online" || !["confirmed", "in_progress"].includes(appt.status)) return "none";
+  const opens = new Date(appt.slot_start).getTime() - 10 * 60_000;
+  const closes = new Date(appt.slot_end).getTime() + 30 * 60_000;
+  if (now < opens) return "upcoming";
+  return now <= closes ? "open" : "closed";
+}

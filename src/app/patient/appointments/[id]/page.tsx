@@ -16,6 +16,7 @@ import { doctorPhotoUrl, formatFee } from "@/lib/doctor/constants";
 import { CONSULTATION_TYPE_LABEL } from "@/lib/schedule/constants";
 import { getAvailableSlots } from "@/lib/schedule/queries";
 import { PaymentPanel } from "@/components/payments/payment-panel";
+import { JoinCard } from "@/components/consult/join-card";
 import { getPaymentSummary, getPlatformSettings } from "@/lib/payments/queries";
 
 export const metadata: Metadata = { title: "Appointment · MedLife" };
@@ -64,6 +65,7 @@ export default async function PatientAppointmentPage({ params, searchParams }: P
 
       <div className="grid grid-cols-1 gap-6 @4xl:grid-cols-[minmax(0,1fr)_18rem] @5xl:grid-cols-[minmax(0,1fr)_20rem] @5xl:gap-8">
         <div className="flex min-w-0 flex-col gap-6">
+          <JoinCard appointment={appt} role="patient" zone={zone} />
           <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
             <div className="flex flex-wrap items-center gap-4">
               <DoctorAvatar name={appt.doctor?.display_name ?? "Doctor"} photoUrl={doctorPhotoUrl(appt.doctor?.photo_path ?? null)} size={56} />

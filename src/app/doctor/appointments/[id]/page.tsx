@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { CancelForm } from "@/components/appointments/cancel-form";
 import { AppointmentHistory } from "@/components/appointments/history";
 import { StatusActions } from "@/components/appointments/status-actions";
+import { JoinCard } from "@/components/consult/join-card";
 import { AppointmentStatusPill } from "@/components/appointments/status-pill";
 import { SlotPicker } from "@/components/schedule/slot-picker";
 import { LocalTime } from "@/components/ui/local-time";
@@ -52,6 +53,7 @@ export default async function DoctorAppointmentPage({ params }: PageProps<"/doct
 
       <div className="grid grid-cols-1 gap-6 @4xl:grid-cols-[minmax(0,1fr)_18rem] @5xl:grid-cols-[minmax(0,1fr)_20rem] @5xl:gap-8">
         <div className="flex min-w-0 flex-col gap-6">
+          <JoinCard appointment={appt} role="doctor" zone={tz} />
           <Card title="Appointment">
             <dl className="grid gap-3 text-sm sm:grid-cols-2">
               <Row label="When"><LocalTime iso={appt.slot_start} fallbackZone={tz} /></Row>
@@ -71,7 +73,7 @@ export default async function DoctorAppointmentPage({ params }: PageProps<"/doct
             </dl>
             {(appt.status === "confirmed" || appt.status === "in_progress") && (
               <div className="mt-5">
-                <StatusActions appointmentId={appt.id} status={appt.status} />
+                <StatusActions appointmentId={appt.id} status={appt.status} online={appt.consultation_type === "online"} />
               </div>
             )}
           </Card>
