@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SearchBar } from "@/components/search/search-bar";
 import { site } from "@/lib/site";
 import {
   CalendarIcon,
@@ -28,19 +29,23 @@ export function Hero() {
             video and get a signed digital prescription — all in one place.
           </p>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-8 max-w-xl">
+            <SearchBar size="lg" />
+          </div>
+
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
             <Link
               href={site.signupHref}
               className="inline-flex h-12 items-center justify-center rounded-lg bg-teal-700 px-6 font-semibold text-white shadow-sm transition-colors hover:bg-teal-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
             >
               Get started
             </Link>
-            <a
-              href="#specialties"
+            <Link
+              href="/doctors"
               className="inline-flex h-12 items-center justify-center rounded-lg border border-slate-300 bg-white px-6 font-semibold text-slate-800 transition-colors hover:bg-slate-50"
             >
-              Browse specialties
-            </a>
+              Browse all doctors
+            </Link>
           </div>
 
           <ul className="mt-8 flex flex-col gap-2 text-sm text-slate-700 sm:flex-row sm:flex-wrap sm:gap-x-6">

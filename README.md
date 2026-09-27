@@ -32,7 +32,8 @@ with your email in the SQL editor. Log out and back in.
 | `feature/m1-auth` | M1 Authentication & Role Management | ✅ merged |
 | `feature/m2-patient-profile` | M2 Patient Profile & Medical Records | ✅ merged |
 | `feature/m3-doctor-portfolio` | M3 Doctor Portfolio | ✅ merged |
-| `feature/m4-doctor-verification` | M4 Doctor Verification | ✅ |
+| `feature/m4-doctor-verification` | M4 Doctor Verification | ✅ merged |
+| `feature/m5-search` | M5 Search & Discovery | ✅ |
 
 ## M1 — Authentication & roles
 
@@ -83,6 +84,18 @@ with your email in the SQL editor. Log out and back in.
 - Status changes go only through database functions (`submit_verification_request`,
   `review_verification_request`), which check permissions, required documents and the current
   status, keep `doctor_profiles.is_verified` in sync and write `verification_events`.
+
+## M5 — Search & discovery
+
+- **`/doctors`**: search by name, headline or specialty; filter by specialty, consultation type,
+  fee range (৳), language and chamber city; sort by best match, fee or experience; 12 per page.
+  Filters are a plain GET form, so every search is a shareable URL and works without JavaScript.
+- **Landing page**: hero search box; specialty cards open `/doctors?specialty=…`.
+- **Only public doctors** (verified + active) are ever listed: search runs as an anonymous visitor
+  through the `search_doctors()` DB function, with trigram indexes for fast name matching.
+- **SEO**: `/sitemap.xml` (all public doctors + specialty pages, hourly), `/robots.txt`
+  (private areas excluded), per-specialty titles; filter combinations are `noindex`.
+- Coming later: "next available slot" (M6/M7) and rating (M12) filters.
 
 ## Project layout
 

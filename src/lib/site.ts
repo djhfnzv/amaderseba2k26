@@ -9,9 +9,9 @@ export const site = {
 };
 
 export const navLinks = [
-  { href: "#features", label: "Why MedLife" },
-  { href: "#how-it-works", label: "How it works" },
-  { href: "#specialties", label: "Specialties" },
-  { href: "#for-doctors", label: "For doctors" },
-  { href: "#faq", label: "FAQ" },
+  { href: "/doctors", label: "Find doctors" },
+  { href: "/#how-it-works", label: "How it works" },
+  { href: "/#specialties", label: "Specialties" },
+  { href: "/#for-doctors", label: "For doctors" },
+  { href: "/#faq", label: "FAQ" },
 ];
