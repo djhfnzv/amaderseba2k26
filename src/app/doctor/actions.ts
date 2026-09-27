@@ -204,7 +204,7 @@ export async function savePhoto(path: string): Promise<{ error?: string }> {
   // Trust what storage actually holds, not what the browser claimed.
   const { data: info } = await bucket.info(path);
   const type = info?.contentType ?? "";
-  if (!info || !(type in PHOTO_TYPES) || !info.size || info.size > MAX_PHOTO_BYTES) {
+  if (!info || !Object.hasOwn(PHOTO_TYPES, type) || !info.size || info.size > MAX_PHOTO_BYTES) {
     await bucket.remove([path]);
     return { error: "Use a JPG, PNG or WebP image up to 2 MB." };
   }

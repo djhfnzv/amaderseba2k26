@@ -1,4 +1,4 @@
-import type { BloodGroup, MedicalFileCategory, MedicalFileMime, Sex } from "@/types/database";
+import type { BloodGroup, MedicalFileCategory, Sex } from "@/types/database";
 
 export const SEX_OPTIONS: { value: Sex; label: string }[] = [
   { value: "female", label: "Female" },
@@ -62,12 +62,9 @@ export const FILE_CATEGORY_LABEL = Object.fromEntries(
 ) as Record<MedicalFileCategory, string>;
 
 export const MEDICAL_FILES_BUCKET = "medical-files";
-export const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB — matches bucket + DB limit
-
-export const ALLOWED_FILE_TYPES: Record<MedicalFileMime, string> = {
-  "application/pdf": "pdf",
-  "image/jpeg": "jpg",
-  "image/png": "png",
-};
-
-export const FILE_ACCEPT = ".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png";
+// Shared document rules (PDF/JPG/PNG, 10 MB) live in lib/files.
+export {
+  DOCUMENT_TYPES as ALLOWED_FILE_TYPES,
+  MAX_DOCUMENT_BYTES as MAX_FILE_BYTES,
+  DOCUMENT_ACCEPT as FILE_ACCEPT,
+} from "@/lib/files";

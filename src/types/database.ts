@@ -143,6 +143,44 @@ type ChildTable<R extends { id: string; doctor_id: string; created_at: string }>
   Relationships: [];
 };
 
+export type VerificationStatus = "draft" | "pending" | "approved" | "rejected";
+export type VerificationDocType = "license" | "degree" | "national_id" | "other";
+export type VerificationAction = "submitted" | "approved" | "rejected" | "revoked";
+
+type VerificationRequestRow = {
+  id: string;
+  doctor_id: string;
+  status: VerificationStatus;
+  submitted_at: string | null;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  rejection_reason: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type VerificationDocumentRow = {
+  id: string;
+  request_id: string;
+  doctor_id: string;
+  doc_type: VerificationDocType;
+  label: string | null;
+  storage_path: string;
+  file_name: string;
+  mime_type: MedicalFileMime;
+  size_bytes: number;
+  created_at: string;
+};
+
+type VerificationEventRow = {
+  id: string;
+  request_id: string;
+  action: VerificationAction;
+  actor_id: string | null;
+  reason: string | null;
+  created_at: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -202,12 +240,36 @@ export type Database = {
       doctor_chambers: ChildTable<DoctorChamberRow>;
       doctor_publications: ChildTable<DoctorPublicationRow>;
       doctor_awards: ChildTable<DoctorAwardRow>;
+      verification_requests: {
+        Row: VerificationRequestRow;
+        Insert: { doctor_id: string; status?: "draft" };
+        Update: never;
+        Relationships: [];
+      };
+      verification_documents: {
+        Row: VerificationDocumentRow;
+        Insert: Omit<VerificationDocumentRow, "id" | "doctor_id" | "created_at"> & { doctor_id?: string };
+        Update: never;
+        Relationships: [];
+      };
+      verification_events: {
+        Row: VerificationEventRow;
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
     };
     Views: { [_ in never]: never };
     Functions: {
       current_user_role: { Args: Record<string, never>; Returns: string };
       is_admin: { Args: Record<string, never>; Returns: boolean };
       doctor_is_public: { Args: { doctor: string }; Returns: boolean };
+      verification_request_editable: { Args: { request: string }; Returns: boolean };
+      submit_verification_request: { Args: Record<string, never>; Returns: undefined };
+      review_verification_request: {
+        Args: { p_request_id: string; p_decision: "approve" | "reject" | "revoke"; p_reason?: string | null };
+        Returns: undefined;
+      };
     };
     Enums: { account_status: AccountStatus };
     CompositeTypes: { [_ in never]: never };
@@ -224,3 +286,6 @@ export type DoctorExperience = DoctorExperienceRow;
 export type DoctorChamber = DoctorChamberRow;
 export type DoctorPublication = DoctorPublicationRow;
 export type DoctorAward = DoctorAwardRow;
+export type VerificationRequest = VerificationRequestRow;
+export type VerificationDocument = VerificationDocumentRow;
+export type VerificationEvent = VerificationEventRow;

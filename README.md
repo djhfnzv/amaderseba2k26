@@ -31,7 +31,8 @@ with your email in the SQL editor. Log out and back in.
 | `feature/landing-page` | Project scaffold + public landing page | ✅ merged |
 | `feature/m1-auth` | M1 Authentication & Role Management | ✅ merged |
 | `feature/m2-patient-profile` | M2 Patient Profile & Medical Records | ✅ merged |
-| `feature/m3-doctor-portfolio` | M3 Doctor Portfolio | ✅ |
+| `feature/m3-doctor-portfolio` | M3 Doctor Portfolio | ✅ merged |
+| `feature/m4-doctor-verification` | M4 Doctor Verification | ✅ |
 
 ## M1 — Authentication & roles
 
@@ -67,10 +68,21 @@ with your email in the SQL editor. Log out and back in.
   schema.org `Physician` JSON-LD. The address is generated from the name and editable.
 - **Visibility:** only **verified** doctors with active accounts are public. A doctor can always
   preview their own page (never indexed). Doctors cannot verify themselves (DB trigger).
-- **Until M4:** verify a doctor for testing with
-  [`supabase/seed/verify_doctor.sql`](supabase/seed/verify_doctor.sql).
 - **Photos:** public bucket `doctor-photos` (2 MB, JPG/PNG/WebP), same signed-upload +
   server-check flow as M2.
+
+## M4 — Doctor verification
+
+- **Doctor** (`/doctor/verification`): uploads medical license, degree certificate and national ID
+  (private `verification-docs` bucket), sees a checklist, then submits. Documents are locked while
+  under review. If rejected, the doctor sees the reason, fixes documents and resubmits.
+- **Admin** (`/admin/verifications`): queue with Pending / Approved / Rejected / All tabs. Each
+  request shows the doctor's details, claimed education, documents (60-second links) and full
+  history. **Approve** makes the page public; **Reject** and **Revoke** require a reason the
+  doctor sees.
+- Status changes go only through database functions (`submit_verification_request`,
+  `review_verification_request`), which check permissions, required documents and the current
+  status, keep `doctor_profiles.is_verified` in sync and write `verification_events`.
 
 ## Project layout
 

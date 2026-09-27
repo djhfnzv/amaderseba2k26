@@ -4,6 +4,7 @@ import { DoctorAvatar } from "@/components/doctor/doctor-avatar";
 import { VerificationBadge } from "@/components/doctor/verification-badge";
 import { requireRole } from "@/lib/auth/guards";
 import { doctorPhotoUrl } from "@/lib/doctor/constants";
+import { getOwnRequest } from "@/lib/verification/queries";
 import {
   getOrCreateOwnProfile,
   getPortfolioDetails,
@@ -15,7 +16,7 @@ export const metadata: Metadata = { title: "Doctor dashboard · MedLife" };
 export default async function DoctorDashboard() {
   const user = await requireRole("doctor", "/doctor");
   const profile = await getOrCreateOwnProfile(user);
-  const details = await getPortfolioDetails(user.id);
+  const [details, request] = await Promise.all([getPortfolioDetails(user.id), getOwnRequest(user.id)]);
   const checklist = portfolioChecklist({ profile, ...details });
   const done = checklist.filter((c) => c.done).length;
   const percent = Math.round((done / checklist.length) * 100);
@@ -32,7 +33,7 @@ export default async function DoctorDashboard() {
         </div>
       </div>
 
-      <VerificationBadge verified={profile.is_verified} slug={profile.slug} />
+      <VerificationBadge status={request?.status ?? null} reason={request?.rejection_reason} slug={profile.slug} />
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -89,7 +90,7 @@ export default async function DoctorDashboard() {
       <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-5 sm:p-6">
         <h2 className="text-sm font-semibold text-slate-900">Coming soon</h2>
         <p className="mt-1 text-sm text-slate-600">
-          Verification documents, weekly schedule, patient queue and prescriptions.
+          Weekly schedule, patient queue and prescriptions.
         </p>
       </section>
     </div>

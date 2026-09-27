@@ -11,6 +11,7 @@ import {
   listSpecialties,
 } from "@/lib/doctor/queries";
 import { env } from "@/lib/env";
+import { getOwnRequest } from "@/lib/verification/queries";
 import { BasicInfoForm } from "./basic-info-form";
 
 export const metadata: Metadata = { title: "Portfolio · MedLife" };
@@ -18,9 +19,10 @@ export const metadata: Metadata = { title: "Portfolio · MedLife" };
 export default async function PortfolioEditorPage() {
   const user = await requireRole("doctor", "/doctor/portfolio");
   const profile = await getOrCreateOwnProfile(user);
-  const [details, specialties] = await Promise.all([
+  const [details, specialties, request] = await Promise.all([
     getPortfolioDetails(user.id),
     listSpecialties(),
+    getOwnRequest(user.id),
   ]);
 
   return (
@@ -39,7 +41,7 @@ export default async function PortfolioEditorPage() {
         </Link>
       </div>
 
-      <VerificationBadge verified={profile.is_verified} slug={profile.slug} />
+      <VerificationBadge status={request?.status ?? null} reason={request?.rejection_reason} slug={profile.slug} />
 
       <Card title="Photo">
         <PhotoUploader name={profile.display_name} photoUrl={doctorPhotoUrl(profile.photo_path)} />
