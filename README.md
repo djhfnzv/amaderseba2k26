@@ -33,7 +33,8 @@ with your email in the SQL editor. Log out and back in.
 | `feature/m2-patient-profile` | M2 Patient Profile & Medical Records | ✅ merged |
 | `feature/m3-doctor-portfolio` | M3 Doctor Portfolio | ✅ merged |
 | `feature/m4-doctor-verification` | M4 Doctor Verification | ✅ merged |
-| `feature/m5-search` | M5 Search & Discovery | ✅ |
+| `feature/m5-search` | M5 Search & Discovery | ✅ merged |
+| `feature/m6-schedule` | M6 Schedule Engine | ✅ |
 
 ## M1 — Authentication & roles
 
@@ -96,6 +97,20 @@ with your email in the SQL editor. Log out and back in.
 - **SEO**: `/sitemap.xml` (all public doctors + specialty pages, hourly), `/robots.txt`
   (private areas excluded), per-specialty titles; filter combinations are `noindex`.
 - Coming later: "next available slot" (M6/M7) and rating (M12) filters.
+
+## M6 — Schedule engine
+
+- **Slot rules:** a new slot starts every **30 minutes** from the block start (9:00, 9:30, …).
+  Consultation length is **15–25 min per block (default 20)**; the rest of each 30 minutes is
+  buffer. Patients can book from **2 hours** ahead up to **30 days** ahead.
+- **Doctor** (`/doctor/schedule`): time zone (default Asia/Dhaka); weekly hours as time blocks per
+  day (apply to several days at once; multiple blocks = breaks), each online or in-person at a
+  chamber; pause/resume/delete blocks; leave and blocked dates (whole days or part of a day,
+  private note); 7-day preview.
+- **Public profile:** "Available slots" for the next 7 days with day and online/in-person tabs,
+  shown in the **viewer's** time zone. Booking itself arrives in M7.
+- Hours and leave are stored in the doctor's local time; `get_available_slots()` returns UTC.
+  The DB refuses overlapping blocks and blocks at another doctor's chamber.
 
 ## Project layout
 

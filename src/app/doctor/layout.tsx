@@ -9,6 +9,7 @@ export default async function DoctorLayout({ children }: LayoutProps<"/doctor">)
       nav={[
         { href: "/doctor", label: "Dashboard" },
         { href: "/doctor/portfolio", label: "Portfolio" },
+        { href: "/doctor/schedule", label: "Schedule" },
         { href: "/doctor/verification", label: "Verification" },
       ]}
     >

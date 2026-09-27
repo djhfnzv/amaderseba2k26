@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/landing/site-header";
 import { doctorPhotoUrl } from "@/lib/doctor/constants";
 import { getPortfolioBySlug, type Portfolio } from "@/lib/doctor/queries";
 import { env } from "@/lib/env";
+import { getAvailableSlots } from "@/lib/schedule/queries";
 import { site } from "@/lib/site";
 
 function describe(p: Portfolio): string {
@@ -74,6 +75,8 @@ export default async function DoctorPublicPage({ params }: PageProps<"/doctors/[
   if (!portfolio) notFound();
 
   const isPreview = !portfolio.profile.is_verified;
+  // Public visitors get public slots; an unverified doctor previewing their own page uses their session.
+  const slots = await getAvailableSlots(portfolio.profile.user_id, { days: 7, asViewer: isPreview });
 
   return (
     <>
@@ -96,7 +99,7 @@ export default async function DoctorPublicPage({ params }: PageProps<"/doctors/[
         </div>
       )}
       <main className="flex-1 bg-slate-50">
-        <PortfolioView portfolio={portfolio} />
+        <PortfolioView portfolio={portfolio} slots={slots} />
       </main>
       <EmergencyNotice />
       <SiteFooter />
