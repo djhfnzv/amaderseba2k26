@@ -20,13 +20,13 @@ const specialties = [
 export function Specialties() {
   return (
     <section id="specialties" className="scroll-mt-20 bg-white py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="page-container">
         <SectionHeading
           eyebrow="Specialties"
           title="Specialists for every need"
           description="Consult experienced doctors across a wide range of specialties."
         />
-        <ul className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <ul className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {specialties.map((s) => (
             <li key={s.slug}>
               <Link

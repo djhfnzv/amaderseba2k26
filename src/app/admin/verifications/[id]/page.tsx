@@ -47,8 +47,8 @@ export default async function ReviewRequestPage({ params }: PageProps<"/admin/ve
         </Link>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="flex flex-col gap-6 lg:col-span-2">
+      <div className="grid grid-cols-1 gap-6 @4xl:grid-cols-[minmax(0,1fr)_18rem] @5xl:grid-cols-[minmax(0,1fr)_20rem] @5xl:gap-8">
+        <div className="flex min-w-0 flex-col gap-6">
           <Card title="Details to check">
             <dl className="grid gap-3 text-sm sm:grid-cols-2">
               <Row label="License (BMDC) number" value={profile.license_number} highlight />
@@ -97,7 +97,7 @@ export default async function ReviewRequestPage({ params }: PageProps<"/admin/ve
           </section>
         </div>
 
-        <aside className="flex flex-col gap-6 lg:sticky lg:top-6 lg:self-start">
+        <aside className="flex min-w-0 flex-col gap-6 @4xl:sticky @4xl:top-6 @4xl:self-start">
           <Card title="Decision">
             <ReviewPanel requestId={request.id} status={request.status} />
             {request.rejection_reason && request.status === "rejected" && (

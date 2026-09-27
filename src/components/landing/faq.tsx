@@ -26,7 +26,7 @@ const faqs = [
 export function Faq() {
   return (
     <section id="faq" className="scroll-mt-20 bg-white py-20">
-      <div className="mx-auto max-w-3xl px-4 sm:px-6">
+      <div className="page-container max-w-4xl">
         <SectionHeading eyebrow="FAQ" title="Frequently asked questions" />
         <div className="mt-10 divide-y divide-slate-200 rounded-2xl border border-slate-200">
           {faqs.map((f) => (

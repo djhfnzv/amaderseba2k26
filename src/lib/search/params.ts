@@ -67,8 +67,8 @@ export function parseFilters(raw: RawParams): SearchFilters {
   };
 }
 
-/** Builds a /doctors URL from filters, dropping defaults. */
-export function searchUrl(filters: Partial<SearchFilters>): string {
+/** Query string for filters, dropping defaults (no leading "?"). */
+export function searchQuery(filters: Partial<SearchFilters>): string {
   const p = new URLSearchParams();
   if (filters.q) p.set("q", filters.q);
   if (filters.specialty) p.set("specialty", filters.specialty);
@@ -80,10 +80,11 @@ export function searchUrl(filters: Partial<SearchFilters>): string {
   if (filters.available) p.set("available", String(filters.available));
   if (filters.sort && filters.sort !== "relevance") p.set("sort", filters.sort);
   if (filters.page && filters.page > 1) p.set("page", String(filters.page));
-  const qs = p.toString();
-  return qs ? `/doctors?${qs}` : "/doctors";
+  return p.toString();
 }
 
-export function hasActiveFilters(f: SearchFilters): boolean {
-  return !!(f.q || f.specialty || f.type || f.minFee != null || f.maxFee != null || f.language || f.city || f.available);
+/** Builds a search URL from filters, dropping defaults. */
+export function searchUrl(filters: Partial<SearchFilters>, base = "/doctors"): string {
+  const qs = searchQuery(filters);
+  return qs ? `${base}?${qs}` : base;
 }

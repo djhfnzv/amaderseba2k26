@@ -7,8 +7,9 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
     <AppShell
       user={user}
       nav={[
-        { href: "/admin", label: "Dashboard" },
-        { href: "/admin/verifications", label: "Verifications" },
+        { href: "/admin", label: "Dashboard", icon: "home", exact: true },
+        { href: "/admin/verifications", label: "Verifications", icon: "shield" },
+        { href: "/admin/users", label: "Users", icon: "users" },
       ]}
     >
       {children}

@@ -33,8 +33,8 @@ export default async function PatientDashboard() {
 
       {percent < 100 && <CompleteProfileCard percent={percent} missing={missing} />}
 
-      <div className="grid gap-6 lg:grid-cols-5">
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 lg:col-span-2">
+      <div className="grid grid-cols-1 gap-6 @4xl:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] @5xl:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] @5xl:gap-8">
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900">Health summary</h2>
             <Link href="/patient/profile" className="text-sm font-medium text-teal-700 hover:underline">
@@ -44,7 +44,7 @@ export default async function PatientDashboard() {
           <HealthSummary profile={profile} />
         </section>
 
-        <section className="lg:col-span-3">
+        <section className="min-w-0">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900">Recent reports</h2>
             <Link href="/patient/records" className="text-sm font-medium text-teal-700 hover:underline">
@@ -67,7 +67,7 @@ export default async function PatientDashboard() {
         ) : (
           <div className="flex flex-col items-start gap-3 rounded-2xl border border-dashed border-slate-300 bg-white p-5 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-slate-600">No upcoming appointments.</p>
-            <Link href="/doctors" className="inline-flex h-10 items-center rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white hover:bg-teal-800">
+            <Link href="/patient/doctors" className="inline-flex h-10 items-center rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white hover:bg-teal-800">
               Find a doctor
             </Link>
           </div>

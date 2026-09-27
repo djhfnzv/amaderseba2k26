@@ -31,10 +31,14 @@ export function ProfileForm({
     state?.values?.[key] ?? (saved == null ? "" : String(saved));
 
   return (
-    <form action={action} className="flex flex-col gap-8" noValidate>
+    <form action={action} className="grid grid-cols-1 gap-6 @5xl:grid-cols-2 @5xl:items-start @5xl:gap-8" noValidate>
       {welcome && <input type="hidden" name="welcome" value="1" />}
-      {state?.error && <Alert>{state.error}</Alert>}
-      {state?.message && <Alert kind="success">{state.message}</Alert>}
+      {(state?.error || state?.message) && (
+        <div className="@5xl:col-span-2">
+          {state?.error && <Alert>{state.error}</Alert>}
+          {state?.message && <Alert kind="success">{state.message}</Alert>}
+        </div>
+      )}
 
       <Section title="Basic information">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -88,6 +92,7 @@ export function ProfileForm({
       </Section>
 
       <Section
+        className="@5xl:row-span-2"
         title="Allergies & conditions"
         description="Doctors see this before your consultation. Allergies are used to warn doctors when prescribing."
       >
@@ -132,7 +137,7 @@ export function ProfileForm({
         </div>
       </Section>
 
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end @5xl:col-span-2">
         {welcome && (
           <Link
             href="/patient"
@@ -153,13 +158,15 @@ function Section({
   title,
   description,
   children,
+  className = "",
 }: {
   title: string;
   description?: string;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <fieldset className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+    <fieldset className={`min-w-0 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 ${className}`}>
       <legend className="sr-only">{title}</legend>
       <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
       {description && <p className="mt-1 text-sm text-slate-600">{description}</p>}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth/guards";
 import { PortfolioView } from "@/components/doctor/portfolio-view";
 import { EmergencyNotice, SiteFooter } from "@/components/landing/site-footer";
 import { SiteHeader } from "@/components/landing/site-header";
@@ -71,6 +72,10 @@ function jsonLd(p: Portfolio) {
 export default async function DoctorPublicPage({ params }: PageProps<"/doctors/[slug]">) {
   const { slug } = await params;
   // RLS returns only verified+active doctors, or the viewer's own profile.
+  // Signed-in patients view and book inside their dashboard.
+  const viewer = await getCurrentUser();
+  if (viewer?.role === "patient") redirect(`/patient/doctors/${slug}`);
+
   const portfolio = await getPortfolioBySlug(slug);
   if (!portfolio) notFound();
 
@@ -89,7 +94,7 @@ export default async function DoctorPublicPage({ params }: PageProps<"/doctors/[
       <SiteHeader />
       {isPreview && (
         <div role="note" className="border-b border-amber-200 bg-amber-50">
-          <p className="mx-auto max-w-6xl px-4 py-3 text-sm text-amber-900 sm:px-6">
+          <p className="page-container py-3 text-sm text-amber-900">
             <strong className="font-semibold">Preview.</strong> Only you can see this page. It becomes
             public once your account is verified.{" "}
             <Link href="/doctor/portfolio" className="font-semibold underline">

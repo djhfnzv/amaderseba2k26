@@ -26,7 +26,7 @@ export default async function PortfolioEditorPage() {
   ]);
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Your portfolio</h1>
@@ -43,24 +43,32 @@ export default async function PortfolioEditorPage() {
 
       <VerificationBadge status={request?.status ?? null} reason={request?.rejection_reason} slug={profile.slug} />
 
-      <Card title="Photo">
-        <PhotoUploader name={profile.display_name} photoUrl={doctorPhotoUrl(profile.photo_path)} />
-      </Card>
+      <div className="grid grid-cols-1 gap-6 @5xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] @5xl:items-start @5xl:gap-8">
+        {/* Left: who you are */}
+        <div className="flex min-w-0 flex-col gap-6">
+          <Card title="Photo">
+            <PhotoUploader name={profile.display_name} photoUrl={doctorPhotoUrl(profile.photo_path)} />
+          </Card>
 
-      <Card title="Profile, specialties & fees">
-        <BasicInfoForm
-          profile={profile}
-          specialties={specialties}
-          selectedSpecialtyIds={details.specialties.map((s) => s.id)}
-          siteUrl={env.siteUrl}
-        />
-      </Card>
+          <Card title="Profile, specialties & fees">
+            <BasicInfoForm
+              profile={profile}
+              specialties={specialties}
+              selectedSpecialtyIds={details.specialties.map((s) => s.id)}
+              siteUrl={env.siteUrl}
+            />
+          </Card>
+        </div>
 
-      {SECTION_KEYS.map((key) => (
-        <Card key={key} title={SECTIONS[key].title} description={SECTIONS[key].description}>
-          <SectionEditor section={key} items={details[key]} />
-        </Card>
-      ))}
+        {/* Right: background and chambers */}
+        <div className="flex min-w-0 flex-col gap-6">
+          {SECTION_KEYS.map((key) => (
+            <Card key={key} title={SECTIONS[key].title} description={SECTIONS[key].description}>
+              <SectionEditor section={key} items={details[key]} />
+            </Card>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

@@ -4,9 +4,9 @@ import { LocalTime } from "@/components/ui/local-time";
 import { doctorPhotoUrl, formatFee, yearsOfExperience } from "@/lib/doctor/constants";
 import type { DoctorSearchRow } from "@/types/database";
 
-export function DoctorCard({ doctor }: { doctor: DoctorSearchRow }) {
+export function DoctorCard({ doctor, profileBase = "/doctors" }: { doctor: DoctorSearchRow; profileBase?: string }) {
   const years = yearsOfExperience(doctor.practice_since_year);
-  const href = `/doctors/${doctor.slug}`;
+  const href = `${profileBase}/${doctor.slug}`;
 
   return (
     <article className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-md">

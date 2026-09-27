@@ -35,7 +35,8 @@ with your email in the SQL editor. Log out and back in.
 | `feature/m4-doctor-verification` | M4 Doctor Verification | ✅ merged |
 | `feature/m5-search` | M5 Search & Discovery | ✅ merged |
 | `feature/m6-schedule` | M6 Schedule Engine | ✅ merged |
-| `feature/m7-booking` | M7 Appointments & Booking | ✅ |
+| `feature/m7-booking` | M7 Appointments & Booking | ✅ merged |
+| `feature/m13-admin-users` | M13 (basic) Admin user management | ✅ |
 
 ## M1 — Authentication & roles
 
@@ -132,6 +133,19 @@ with your email in the SQL editor. Log out and back in.
   **Available soonest** sort.
 - All changes go through DB functions (`hold_slot`, `confirm_booking`, `cancel_appointment`,
   `reschedule_appointment`, `update_appointment_status`) and are logged in `appointment_events`.
+
+## M13 (basic) — Admin user management
+
+- **`/admin/users`**: search by name, email or phone; filter by role (tabs) and status; 25 per page.
+- **`/admin/users/[id]`**: account details, doctor verification status, appointment counts, admin
+  history, and **Suspend** (reason required, shown to the user) / **Reactivate** (FR-A-02).
+- **Suspending** (DB function `admin_set_user_status`): cancels the user's upcoming appointments
+  (patients of a suspended doctor get a neutral message, not the admin's reason), drops slot holds,
+  removes a doctor from search/public pages, and bans the account at the Auth layer so it can't
+  sign in or refresh its session. Every action is logged in `admin_actions`.
+- Admins can't suspend themselves or other admins.
+- **Admin dashboard**: pending verifications, appointments today/upcoming, patients, doctors
+  (verified), suspended accounts.
 
 ## Project layout
 

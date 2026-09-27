@@ -44,13 +44,13 @@ const features = [
 export function Features() {
   return (
     <section id="features" className="scroll-mt-20 bg-white py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="page-container">
         <SectionHeading
           eyebrow="Why MedLife"
           title="Care you can trust, from booking to prescription"
           description="Everything you need for a doctor visit — without the waiting room guesswork."
         />
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:gap-6">
           {features.map(({ icon: Icon, title, body }) => (
             <article
               key={title}

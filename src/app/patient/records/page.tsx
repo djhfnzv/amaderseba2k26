@@ -14,7 +14,7 @@ export default async function MedicalRecordsPage({ searchParams }: PageProps<"/p
   const isWelcome = welcome === "1";
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div>
       {isWelcome && <WelcomeSteps current={2} />}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
@@ -35,14 +35,14 @@ export default async function MedicalRecordsPage({ searchParams }: PageProps<"/p
         )}
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-5">
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 lg:col-span-2 lg:self-start">
+      <div className="mt-6 grid grid-cols-1 gap-6 @4xl:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] @5xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] @5xl:gap-8">
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 @4xl:sticky @4xl:top-6 @4xl:self-start">
           <h2 className="text-lg font-semibold text-slate-900">Upload a report</h2>
           <div className="mt-4">
             <UploadForm />
           </div>
         </section>
-        <section className="lg:col-span-3">
+        <section className="min-w-0">
           <h2 className="mb-3 text-lg font-semibold text-slate-900">
             Your reports <span className="font-normal text-slate-500">({files.length})</span>
           </h2>
