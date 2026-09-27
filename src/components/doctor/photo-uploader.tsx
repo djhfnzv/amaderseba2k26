@@ -14,7 +14,7 @@ export function PhotoUploader({ name, photoUrl }: { name: string; photoUrl: stri
 
   function upload(file: File) {
     setError(null);
-    if (!(file.type in PHOTO_TYPES)) return setError("Use a JPG, PNG or WebP image.");
+    if (!Object.hasOwn(PHOTO_TYPES, file.type)) return setError("Use a JPG, PNG or WebP image.");
     if (file.size > MAX_PHOTO_BYTES) return setError("Photos must be 2 MB or smaller.");
 
     startTransition(async () => {

@@ -8,22 +8,12 @@ import { Field } from "@/components/ui/field";
 import { SelectField } from "@/components/ui/select-field";
 import { TextareaField } from "@/components/ui/textarea-field";
 import { formatBytes, todayIso } from "@/lib/format";
-import {
-  ALLOWED_FILE_TYPES,
-  FILE_ACCEPT,
-  FILE_CATEGORIES,
-  MAX_FILE_BYTES,
-  MEDICAL_FILES_BUCKET,
-} from "@/lib/patient/constants";
+import { checkDocumentFile } from "@/lib/files";
+import { FILE_ACCEPT, FILE_CATEGORIES, MEDICAL_FILES_BUCKET } from "@/lib/patient/constants";
 import { createClient } from "@/lib/supabase/client";
 import type { FormState } from "@/lib/validation/form-state";
 
-function checkFile(file: File | null): string | null {
-  if (!file || file.size === 0) return "Choose a file to upload.";
-  if (!(file.type in ALLOWED_FILE_TYPES)) return "Only PDF, JPG and PNG files are allowed.";
-  if (file.size > MAX_FILE_BYTES) return "Files must be 10 MB or smaller.";
-  return null;
-}
+const checkFile = checkDocumentFile;
 
 /** 1) ask the server for an upload ticket, 2) upload straight to storage, 3) save details. */
 async function uploadAction(prev: FormState, formData: FormData): Promise<FormState> {

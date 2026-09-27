@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth/guards";
+import { isDocumentMime } from "@/lib/files";
 import { createClient } from "@/lib/supabase/server";
 import {
   ALLOWED_FILE_TYPES,
@@ -128,7 +129,7 @@ export async function saveMedicalFile(
   const { data: info, error: infoError } = await bucket.info(f.storagePath);
   const mime = info?.contentType as MedicalFileMime | undefined;
   const size = info?.size ?? 0;
-  if (infoError || !info || !mime || !(mime in ALLOWED_FILE_TYPES) || size <= 0 || size > MAX_FILE_BYTES) {
+  if (infoError || !info || !isDocumentMime(mime) || size <= 0 || size > MAX_FILE_BYTES) {
     await bucket.remove([f.storagePath]);
     return { error: "The upload didn't complete or the file type isn't allowed. Please try again." };
   }
