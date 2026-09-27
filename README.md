@@ -38,7 +38,8 @@ with your email in the SQL editor. Log out and back in.
 | `feature/m7-booking` | M7 Appointments & Booking | ✅ merged |
 | `feature/m13-admin-users` | M13 (basic) Admin user management | ✅ merged |
 | `feature/m8-payments` | M8 Payments (SSLCommerz) | ✅ merged |
-| `feature/m9-video-consultation` | M9 Video consultation (free WebRTC) | ✅ |
+| `feature/m9-video-consultation` | M9 Video consultation (free WebRTC) | ✅ merged |
+| `feature/m10-prescriptions` | M10 E-prescription + advice notes | ✅ |
 
 ## M1 — Authentication & roles
 
@@ -194,6 +195,40 @@ with your email in the SQL editor. Log out and back in.
   server in `.env.local` — either `TURN_URLS`/`TURN_USERNAME`/`TURN_CREDENTIAL` or
   `METERED_TURN_DOMAIN`/`METERED_TURN_API_KEY` (metered.ca free tier). Cameras need `localhost`
   or HTTPS.
+
+## M10 — E-prescription & advice notes
+
+- **Write** (`/doctor/prescriptions`, or **Write prescription** on an appointment): for one of the
+  doctor's own patients (details, allergies and conditions come from their profile) or for a patient
+  **entered manually** (walk-in, no account). From an appointment it is linked to that visit and the
+  consultation notes pre-fill complaint, findings, diagnosis and advice (FR-D-09).
+- **Editor:** complaints, examination, diagnosis; medicines with type-ahead over the catalogue,
+  dose presets (1+0+1 …), timing (before/after meal …), duration and instructions; add a medicine
+  that isn't listed (saved to the doctor's own list, FR-D-10); investigations (common tests +
+  custom); advice with quick suggestions; follow-up date. **Templates** and **copy last
+  prescription** (FR-D-11). Drafts can be saved, previewed as PDF and deleted.
+- **Safety:** allergy warnings (name + drug-group match, e.g. penicillin → amoxicillin) that the doctor
+  must tick to override (FR-D-12); **controlled drugs are blocked in online consultations** (NFR-10),
+  enforced in the database.
+- **Sign & lock** (verified doctors only, FR-D-13): the doctor's name, degrees, registration no.,
+  specialty and chamber are frozen, a 10-character ID + QR code is issued, and the prescription can
+  no longer be changed (DB triggers). **Amend** creates a new version; signing it marks the old one
+  *Replaced* (FR-D-14).
+- **PDF:** A4 at `/prescriptions/[id]/pdf` (doctor, patient, admin), with QR code; drafts show a
+  DRAFT watermark.
+- **Verify** (FR-G-05): `/verify/[code]` (public, from the QR) shows **Valid**, **Replaced — do not
+  dispense** or **Not found**, with doctor, reg. no., patient initials and the medicine list.
+  `/verify` lets pharmacies type the ID.
+- **Advice notes:** doctors can send advice without a prescription from the appointment page.
+- **Patient** (FR-P-10/11): `/patient/prescriptions` (current, replaced, advice) and a section on
+  each appointment; view and download PDFs.
+- **Admin:** `/admin/prescriptions` (read-only, search by doctor or ID) and `/admin/medicines`
+  (FR-A-03): search, add, hide, mark controlled, **CSV import** (`generic_name, brand_name, strength,
+  form, company, is_controlled`; duplicates skipped).
+- **Catalogue:** seeded with ~390 common generics (name, strength, form — no brands) including 27
+  controlled drugs. Add brands via CSV.
+- **Retention:** signed prescriptions can't be deleted. A doctor with signed prescriptions can't be
+  hard-deleted (suspend instead).
 
 ## Project layout
 

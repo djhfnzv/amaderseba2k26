@@ -1,6 +1,8 @@
 // Hand-maintained until we switch to `supabase gen types typescript`.
 // Keep in sync with supabase/migrations.
 
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+
 export type Role = "patient" | "doctor" | "admin";
 export type AccountStatus = "active" | "suspended";
 export type Sex = "male" | "female" | "other";
@@ -405,6 +407,115 @@ type ConsultationMessageRow = {
   created_at: string;
 };
 
+export const MEDICINE_FORMS = [
+  "tablet", "capsule", "syrup", "suspension", "drops", "injection", "cream", "ointment", "gel", "lotion", "inhaler",
+  "nasal_spray", "eye_drops", "ear_drops", "suppository", "sachet", "solution", "other",
+] as const;
+export type MedicineForm = (typeof MEDICINE_FORMS)[number];
+export type PrescriptionStatus = "draft" | "signed" | "superseded";
+export type MedicineTiming = "before_meal" | "after_meal" | "with_meal" | "empty_stomach" | "bedtime" | "any";
+
+type MedicineRow = {
+  id: string;
+  generic_name: string;
+  brand_name: string | null;
+  strength: string | null;
+  form: MedicineForm;
+  company: string | null;
+  is_controlled: boolean;
+  is_active: boolean;
+  is_custom: boolean;
+  created_by: string | null;
+  created_at: string;
+};
+
+type PrescriptionRow = {
+  id: string;
+  doctor_id: string;
+  patient_id: string | null;
+  appointment_id: string | null;
+  parent_id: string | null;
+  version: number;
+  status: PrescriptionStatus;
+  verify_code: string | null;
+  is_online: boolean;
+  patient_name: string;
+  patient_age: string | null;
+  patient_sex: Sex | null;
+  patient_weight: string | null;
+  patient_phone: string | null;
+  chief_complaint: string | null;
+  findings: string | null;
+  diagnosis: string | null;
+  advice: string | null;
+  follow_up_date: string | null;
+  follow_up_note: string | null;
+  doctor_name: string | null;
+  doctor_degrees: string | null;
+  doctor_license: string | null;
+  doctor_specialty: string | null;
+  doctor_chamber: string | null;
+  signed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type PrescriptionItemRow = {
+  id: string;
+  prescription_id: string;
+  medicine_id: string | null;
+  medicine_name: string;
+  generic_name: string | null;
+  strength: string | null;
+  form: string | null;
+  dose: string | null;
+  timing: MedicineTiming | null;
+  duration: string | null;
+  instructions: string | null;
+  is_controlled: boolean;
+  sort_order: number;
+};
+
+type PrescriptionTestRow = {
+  id: string;
+  prescription_id: string;
+  name: string;
+  note: string | null;
+  sort_order: number;
+};
+
+type PrescriptionTemplateRow = {
+  id: string;
+  doctor_id: string;
+  name: string;
+  payload: Json;
+  created_at: string;
+};
+
+type DoctorAdviceRow = {
+  id: string;
+  doctor_id: string;
+  patient_id: string;
+  appointment_id: string | null;
+  title: string | null;
+  body: string;
+  created_at: string;
+};
+
+export type VerifyResult =
+  | { status: "invalid" }
+  | {
+      status: "valid" | "superseded";
+      signed_at: string;
+      replaced_at: string | null;
+      doctor_name: string | null;
+      doctor_license: string | null;
+      doctor_degrees: string | null;
+      patient_initials: string | null;
+      patient_age: string | null;
+      items: { name: string; dose: string | null; duration: string | null }[];
+    };
+
 export type Database = {
   public: {
     Tables: {
@@ -511,6 +622,48 @@ export type Database = {
         Update: never;
         Relationships: [];
       };
+      medicines: {
+        Row: MedicineRow;
+        Insert: Pick<MedicineRow, "generic_name" | "form"> & Partial<Omit<MedicineRow, "id" | "created_at">>;
+        Update: Partial<Omit<MedicineRow, "id" | "created_at" | "created_by">>;
+        Relationships: [];
+      };
+      prescriptions: {
+        Row: PrescriptionRow;
+        Insert: Partial<Omit<PrescriptionRow, "id" | "created_at" | "updated_at" | "status" | "verify_code" | "signed_at">>;
+        Update: Partial<
+          Pick<
+            PrescriptionRow,
+            | "patient_id" | "appointment_id" | "patient_name" | "patient_age" | "patient_sex" | "patient_weight" | "patient_phone"
+            | "chief_complaint" | "findings" | "diagnosis" | "advice" | "follow_up_date" | "follow_up_note"
+          >
+        >;
+        Relationships: [];
+      };
+      prescription_items: {
+        Row: PrescriptionItemRow;
+        Insert: Omit<PrescriptionItemRow, "id">;
+        Update: Partial<Omit<PrescriptionItemRow, "id" | "prescription_id">>;
+        Relationships: [];
+      };
+      prescription_tests: {
+        Row: PrescriptionTestRow;
+        Insert: Omit<PrescriptionTestRow, "id">;
+        Update: Partial<Omit<PrescriptionTestRow, "id" | "prescription_id">>;
+        Relationships: [];
+      };
+      prescription_templates: {
+        Row: PrescriptionTemplateRow;
+        Insert: Pick<PrescriptionTemplateRow, "name" | "payload">;
+        Update: Partial<Pick<PrescriptionTemplateRow, "name" | "payload">>;
+        Relationships: [];
+      };
+      doctor_advice: {
+        Row: DoctorAdviceRow;
+        Insert: Pick<DoctorAdviceRow, "patient_id" | "body"> & Partial<Pick<DoctorAdviceRow, "appointment_id" | "title">>;
+        Update: never;
+        Relationships: [];
+      };
       verification_events: {
         Row: VerificationEventRow;
         Insert: never;
@@ -573,6 +726,9 @@ export type Database = {
       };
       end_consultation: { Args: { p_appointment: string }; Returns: undefined };
       save_consultation_notes: { Args: { p_appointment: string; p_notes: string }; Returns: string };
+      sign_prescription: { Args: { p_id: string }; Returns: string };
+      amend_prescription: { Args: { p_id: string }; Returns: string };
+      verify_prescription: { Args: { p_code: string }; Returns: VerifyResult };
       get_available_slots: {
         Args: { p_doctor: string; p_from?: string | null; p_days?: number; p_type?: ConsultationType | null };
         Returns: AvailableSlot[];
@@ -636,3 +792,9 @@ export type Refund = RefundRow;
 export type Payout = PayoutRow;
 export type Consultation = ConsultationRow;
 export type ConsultationMessage = ConsultationMessageRow;
+export type Medicine = MedicineRow;
+export type Prescription = PrescriptionRow;
+export type PrescriptionItem = PrescriptionItemRow;
+export type PrescriptionTest = PrescriptionTestRow;
+export type PrescriptionTemplate = PrescriptionTemplateRow;
+export type DoctorAdvice = DoctorAdviceRow;
