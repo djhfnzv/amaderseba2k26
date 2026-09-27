@@ -15,20 +15,24 @@ export function PortfolioView({
   portfolio,
   slots,
   bookable,
+  embedded = false,
 }: {
   portfolio: Portfolio;
   slots: AvailableSlot[];
   /** False for an unverified doctor's own preview. */
   bookable: boolean;
+  /** Rendered inside the patient dashboard (no page container/padding). */
+  embedded?: boolean;
 }) {
   const { profile, specialties, education, experience, chambers, publications, awards } = portfolio;
   const years = yearsOfExperience(profile.practice_since_year);
   const degrees = education.map((e) => e.degree).join(", ");
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-3 lg:py-12">
+    <div className={embedded ? "@container" : "page-container @container py-8 lg:py-12"}>
+    <div className="grid grid-cols-1 gap-6 @4xl:grid-cols-[minmax(0,1fr)_20rem] @5xl:grid-cols-[minmax(0,1fr)_22rem] @6xl:grid-cols-[minmax(0,1fr)_24rem] @5xl:gap-8">
       {/* Main column */}
-      <div className="flex flex-col gap-6 lg:col-span-2">
+      <div className="flex min-w-0 flex-col gap-6">
         <section className="rounded-2xl border border-slate-200 bg-white p-6">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
             <DoctorAvatar name={profile.display_name} photoUrl={doctorPhotoUrl(profile.photo_path)} size={112} priority />
@@ -74,6 +78,7 @@ export function PortfolioView({
           </Section>
         )}
 
+        <div className="grid grid-cols-1 gap-6 @5xl:grid-cols-2 @5xl:[&>*:last-child:nth-child(odd)]:col-span-2">
         <ListSection title="Experience" items={experience.map((i) => summarizeItem("experience", i))} />
         <ListSection title="Education" items={education.map((i) => summarizeItem("education", i))} />
 
@@ -100,10 +105,11 @@ export function PortfolioView({
         )}
 
         <ListSection title="Awards" items={awards.map((i) => summarizeItem("awards", i))} />
+        </div>
       </div>
 
       {/* Side column */}
-      <aside className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start">
+      <aside className={`flex min-w-0 flex-col gap-6 @4xl:sticky @4xl:self-start ${embedded ? "@4xl:top-6" : "@4xl:top-24"}`}>
         <section className="rounded-2xl border border-slate-200 bg-white p-6">
           <h2 className="text-lg font-semibold text-slate-900">Consultation</h2>
           <ul className="mt-4 flex flex-col gap-3 text-sm">
@@ -164,6 +170,7 @@ export function PortfolioView({
           </section>
         )}
       </aside>
+    </div>
     </div>
   );
 }

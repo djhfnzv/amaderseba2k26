@@ -11,26 +11,28 @@ export default async function PatientAppointmentsPage() {
   const { upcoming, past } = await listPatientAppointments(user.id);
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-8">
+    <div className="flex flex-col gap-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">My appointments</h1>
           <p className="mt-1 text-slate-600">Upcoming visits, history and changes.</p>
         </div>
-        <Link href="/doctors" className="inline-flex h-10 items-center rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white hover:bg-teal-800">
+        <Link href="/patient/doctors" className="inline-flex h-10 items-center rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white hover:bg-teal-800">
           Book a doctor
         </Link>
       </div>
 
-      <section>
+      <div className="grid grid-cols-1 gap-8 @5xl:grid-cols-2 @5xl:gap-8">
+      <section className="min-w-0">
         <h2 className="mb-3 text-lg font-semibold text-slate-900">Upcoming ({upcoming.length})</h2>
         <AppointmentList items={upcoming} empty="No upcoming appointments." />
       </section>
 
-      <section>
+      <section className="min-w-0">
         <h2 className="mb-3 text-lg font-semibold text-slate-900">Past & cancelled</h2>
         <AppointmentList items={past} empty="Nothing here yet." />
       </section>
+      </div>
     </div>
   );
 }

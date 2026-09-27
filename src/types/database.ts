@@ -289,6 +289,16 @@ type AppointmentEventRow = {
   created_at: string;
 };
 
+type AdminActionRow = {
+  id: string;
+  admin_id: string | null;
+  target_user_id: string;
+  action: "suspended" | "reactivated";
+  reason: string | null;
+  details: { role?: Role; cancelled_appointments?: number };
+  created_at: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -378,6 +388,7 @@ export type Database = {
       appointments: { Row: AppointmentRow; Insert: never; Update: never; Relationships: [] };
       slot_holds: { Row: SlotHoldRow; Insert: never; Update: never; Relationships: [] };
       appointment_events: { Row: AppointmentEventRow; Insert: never; Update: never; Relationships: [] };
+      admin_actions: { Row: AdminActionRow; Insert: never; Update: never; Relationships: [] };
       verification_events: {
         Row: VerificationEventRow;
         Insert: never;
@@ -392,6 +403,10 @@ export type Database = {
       doctor_is_public: { Args: { doctor: string }; Returns: boolean };
       verification_request_editable: { Args: { request: string }; Returns: boolean };
       submit_verification_request: { Args: Record<string, never>; Returns: undefined };
+      admin_set_user_status: {
+        Args: { p_user: string; p_status: AccountStatus; p_reason?: string | null };
+        Returns: number;
+      };
       hold_slot: { Args: { p_doctor: string; p_slot_start: string; p_type: ConsultationType }; Returns: string };
       release_hold: { Args: { p_hold: string }; Returns: undefined };
       confirm_booking: { Args: { p_hold: string; p_note?: string | null }; Returns: string };
@@ -457,3 +472,4 @@ export type DoctorLeave = DoctorLeaveRow;
 export type Appointment = AppointmentRow;
 export type SlotHold = SlotHoldRow;
 export type AppointmentEvent = AppointmentEventRow;
+export type AdminAction = AdminActionRow;

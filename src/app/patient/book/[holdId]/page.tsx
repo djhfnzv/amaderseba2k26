@@ -22,7 +22,7 @@ export default async function ConfirmBookingPage({ params }: PageProps<"/patient
         <h1 className="text-xl font-bold text-slate-900">This hold has expired</h1>
         <p className="mt-2 text-slate-600">Slots are held for 5 minutes. Please pick a time again.</p>
         <Link
-          href={hold?.doctor ? `/doctors/${hold.doctor.slug}` : "/doctors"}
+          href={hold?.doctor ? `/patient/doctors/${hold.doctor.slug}` : "/patient/doctors"}
           className="mt-5 inline-flex h-10 items-center rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white hover:bg-teal-800"
         >
           Pick a new time
@@ -48,8 +48,8 @@ export default async function ConfirmBookingPage({ params }: PageProps<"/patient
   ];
 
   return (
-    <div className="mx-auto flex max-w-lg flex-col gap-5">
-      <div>
+    <div className="mx-auto grid max-w-5xl grid-cols-1 gap-5 @4xl:grid-cols-2 @4xl:items-start @4xl:gap-8">
+      <div className="@4xl:col-span-2">
         <p className="text-sm font-semibold text-teal-700">Step 2 of 2</p>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">Confirm your appointment</h1>
       </div>

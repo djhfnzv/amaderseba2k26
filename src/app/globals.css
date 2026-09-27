@@ -26,3 +26,30 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+/*
+ * One page container for the whole app: fluid up to 1280px, with side
+ * padding that grows with the screen. Use it instead of fixed max-w-* caps.
+ */
+@utility page-container {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+
+  @media (width >= 40rem) {
+    padding-inline: 1.5rem;
+  }
+  @media (width >= 64rem) {
+    padding-inline: 2rem;
+  }
+  @media (width >= 96rem) {
+    padding-inline: 2.5rem;
+  }
+}
+
+/* Card grids that add columns as space allows (min card width set per use). */
+@utility grid-auto-fill {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--card-min, 16rem)), 1fr));
+}

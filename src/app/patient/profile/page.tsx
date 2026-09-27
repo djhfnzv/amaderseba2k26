@@ -12,7 +12,7 @@ export default async function HealthProfilePage({ searchParams }: PageProps<"/pa
   const isWelcome = welcome === "1";
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div>
       {isWelcome && <WelcomeSteps current={1} />}
       <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Health profile</h1>
       <p className="mt-1 text-slate-600">

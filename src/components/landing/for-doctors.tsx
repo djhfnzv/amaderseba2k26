@@ -13,7 +13,7 @@ const benefits = [
 export function ForDoctors() {
   return (
     <section id="for-doctors" className="scroll-mt-20 bg-slate-50 py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="page-container">
         <div className="grid items-center gap-10 overflow-hidden rounded-3xl bg-teal-800 px-6 py-12 text-white sm:px-10 lg:grid-cols-2 lg:px-14">
           <div>
             <span className="grid size-12 place-items-center rounded-xl bg-white/10">

@@ -78,7 +78,9 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
       error:
         error.code === "invalid_credentials"
           ? "Incorrect email or password."
-          : "Could not log you in. Please try again.",
+          : error.code === "user_banned"
+            ? "Your account has been suspended. Please contact support."
+            : "Could not log you in. Please try again.",
       values: publicValues(raw),
     };
   }

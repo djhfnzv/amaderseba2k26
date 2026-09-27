@@ -50,8 +50,8 @@ export default async function DoctorAppointmentPage({ params }: PageProps<"/doct
         <AppointmentStatusPill status={appt.status} />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="flex flex-col gap-6 lg:col-span-2">
+      <div className="grid grid-cols-1 gap-6 @4xl:grid-cols-[minmax(0,1fr)_18rem] @5xl:grid-cols-[minmax(0,1fr)_20rem] @5xl:gap-8">
+        <div className="flex min-w-0 flex-col gap-6">
           <Card title="Appointment">
             <dl className="grid gap-3 text-sm sm:grid-cols-2">
               <Row label="When"><LocalTime iso={appt.slot_start} fallbackZone={tz} /></Row>
@@ -137,7 +137,7 @@ export default async function DoctorAppointmentPage({ params }: PageProps<"/doct
           )}
         </div>
 
-        <aside className="flex flex-col gap-6 lg:self-start">
+        <aside className="flex min-w-0 flex-col gap-6 @4xl:self-start">
           {live && (
             <Card title="Cancel">
               <CancelForm appointmentId={appt.id} reasonRequired />

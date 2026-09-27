@@ -33,7 +33,7 @@ export default async function PatientAppointmentPage({ params, searchParams }: P
   const zone = appt.doctor?.timezone;
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <Link href="/patient/appointments" className="text-sm font-medium text-teal-700 hover:underline">
         ← My appointments
       </Link>
@@ -44,14 +44,14 @@ export default async function PatientAppointmentPage({ params, searchParams }: P
         </Alert>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="flex flex-col gap-6 lg:col-span-2">
+      <div className="grid grid-cols-1 gap-6 @4xl:grid-cols-[minmax(0,1fr)_18rem] @5xl:grid-cols-[minmax(0,1fr)_20rem] @5xl:gap-8">
+        <div className="flex min-w-0 flex-col gap-6">
           <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
             <div className="flex flex-wrap items-center gap-4">
               <DoctorAvatar name={appt.doctor?.display_name ?? "Doctor"} photoUrl={doctorPhotoUrl(appt.doctor?.photo_path ?? null)} size={56} />
               <div className="min-w-0 flex-1">
                 {appt.doctor ? (
-                  <Link href={`/doctors/${appt.doctor.slug}`} className="font-semibold text-slate-900 hover:text-teal-700">
+                  <Link href={`/patient/doctors/${appt.doctor.slug}`} className="font-semibold text-slate-900 hover:text-teal-700">
                     {appt.doctor.display_name}
                   </Link>
                 ) : (
@@ -97,7 +97,7 @@ export default async function PatientAppointmentPage({ params, searchParams }: P
           )}
         </div>
 
-        <aside className="flex flex-col gap-6 lg:self-start">
+        <aside className="flex min-w-0 flex-col gap-6 @4xl:self-start">
           {canChange ? (
             <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
               <h2 className="text-lg font-semibold text-slate-900">Cancel</h2>

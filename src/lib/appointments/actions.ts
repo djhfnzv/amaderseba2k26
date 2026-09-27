@@ -77,7 +77,8 @@ export async function releaseHold(formData: FormData): Promise<void> {
     const supabase = await createClient();
     await supabase.rpc("release_hold", { p_hold: holdId });
   }
-  redirect(SLUG.test(slug) ? `/doctors/${slug}` : "/doctors");
+  // Holds belong to patients, so return to the in-dashboard doctor page.
+  redirect(SLUG.test(slug) ? `/patient/doctors/${slug}` : "/patient/doctors");
 }
 
 // -----------------------------------------------------------------------------

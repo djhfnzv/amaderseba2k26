@@ -53,7 +53,7 @@ export default async function VerificationQueuePage({ searchParams }: PageProps<
             <li key={r.id}>
               <Link
                 href={`/admin/verifications/${r.id}`}
-                className="flex flex-col gap-2 p-4 hover:bg-slate-50 sm:flex-row sm:items-center sm:gap-4"
+                className="flex flex-col gap-2 px-5 py-4 hover:bg-slate-50 sm:grid sm:grid-cols-[minmax(0,1fr)_5rem_15rem] sm:items-center sm:gap-4"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -66,9 +66,9 @@ export default async function VerificationQueuePage({ searchParams }: PageProps<
                       .join(" · ")}
                   </p>
                 </div>
-                <div className="flex gap-4 text-sm text-slate-500 sm:text-right">
+                <div className="flex gap-4 text-sm text-slate-500 sm:contents">
                   <span>{r.documentCount} docs</span>
-                  <span>
+                  <span className="sm:text-right">
                     {r.status === "pending" && r.submitted_at
                       ? `Submitted ${formatDateTime(r.submitted_at)}`
                       : r.reviewed_at
