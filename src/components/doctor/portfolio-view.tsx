@@ -1,7 +1,12 @@
 import { SlotPicker } from "@/components/schedule/slot-picker";
 import { BookingWidget } from "@/components/booking/booking-widget";
 import { todayIn } from "@/lib/schedule/queries";
-import type { AvailableSlot } from "@/types/database";
+import { PublicReviews } from "@/components/reviews/public-reviews";
+import { RatingSummary } from "@/components/reviews/rating-summary";
+import { StarRating } from "@/components/reviews/stars";
+import { shownAverage } from "@/lib/reviews/constants";
+import type { ReviewPage } from "@/lib/reviews/queries";
+import type { AvailableSlot, DoctorRatingStats } from "@/types/database";
 import { DoctorAvatar } from "./doctor-avatar";
 import {
   doctorPhotoUrl,
@@ -17,6 +22,7 @@ export function PortfolioView({
   slots,
   bookable,
   embedded = false,
+  reviews,
 }: {
   portfolio: Portfolio;
   slots: AvailableSlot[];
@@ -24,11 +30,15 @@ export function PortfolioView({
   bookable: boolean;
   /** Rendered inside the patient dashboard (no page container/padding). */
   embedded?: boolean;
+  /** Rating summary + first page of reviews (M12). */
+  reviews?: { stats: DoctorRatingStats | null; page: ReviewPage };
 }) {
   const { profile, specialties, education, experience, chambers, publications, awards } = portfolio;
   const years = yearsOfExperience(profile.practice_since_year);
   const degrees = education.map((e) => e.degree).join(", ");
   const chamberNames = Object.fromEntries(chambers.map((c) => [c.id, c.name]));
+  const avg = shownAverage(reviews?.stats ?? null);
+  const reviewCount = reviews?.stats?.review_count ?? 0;
 
   return (
     <div className={embedded ? "@container" : "page-container @container py-8 lg:py-12"}>
@@ -70,7 +80,21 @@ export function PortfolioView({
             <Stat label="Experience" value={years != null ? `${years}+ years` : "—"} />
             <Stat label="Languages" value={profile.languages.join(", ") || "—"} />
             <Stat label="License" value={profile.license_number ?? "—"} />
-            <Stat label="Rating" value="No reviews yet" />
+            <Stat
+              label="Rating"
+              value={
+                avg != null ? (
+                  <a href="#reviews" className="inline-flex items-center gap-1.5 hover:text-teal-700">
+                    <StarRating value={avg} size="sm" />
+                    {avg.toFixed(1)} <span className="font-normal text-slate-500">({reviewCount})</span>
+                  </a>
+                ) : reviewCount > 0 ? (
+                  <a href="#reviews" className="hover:text-teal-700">{reviewCount} review{reviewCount === 1 ? "" : "s"}</a>
+                ) : (
+                  "No reviews yet"
+                )
+              }
+            />
           </dl>
         </section>
 
@@ -108,6 +132,21 @@ export function PortfolioView({
 
         <ListSection title="Awards" items={awards.map((i) => summarizeItem("awards", i))} />
         </div>
+
+        {reviews && (
+          <section id="reviews" className="scroll-mt-24 rounded-2xl border border-slate-200 bg-white p-6">
+            <h2 className="mb-5 text-lg font-semibold text-slate-900">Patient reviews</h2>
+            <RatingSummary stats={reviews.stats} />
+            <div className="mt-6 border-t border-slate-100 pt-6">
+              <PublicReviews
+                doctorId={profile.user_id}
+                doctorName={profile.display_name}
+                initial={reviews.page.reviews}
+                total={reviews.page.total}
+              />
+            </div>
+          </section>
+        )}
       </div>
 
       {/* Side column */}
@@ -194,7 +233,7 @@ export function PortfolioView({
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="rounded-lg bg-slate-50 p-3">
       <dt className="text-slate-500">{label}</dt>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { DoctorAvatar } from "@/components/doctor/doctor-avatar";
+import { StarRating } from "@/components/reviews/stars";
 import { LocalTime } from "@/components/ui/local-time";
 import { doctorPhotoUrl, formatFee, yearsOfExperience } from "@/lib/doctor/constants";
 import type { DoctorSearchRow } from "@/types/database";
@@ -25,6 +26,17 @@ export function DoctorCard({ doctor, profileBase = "/doctors" }: { doctor: Docto
           {doctor.degrees.length > 0 && (
             <p className="truncate text-xs text-slate-500">{doctor.degrees.join(", ")}</p>
           )}
+          <p className="mt-1 text-xs">
+            {doctor.rating_avg != null ? (
+              <span className="inline-flex items-center gap-1 font-medium text-slate-800">
+                <StarRating value={Number(doctor.rating_avg)} size="sm" />
+                {Number(doctor.rating_avg).toFixed(1)}
+                <span className="font-normal text-slate-500">({doctor.review_count} reviews)</span>
+              </span>
+            ) : (
+              <span className="text-slate-500">{doctor.review_count > 0 ? `${doctor.review_count} review${doctor.review_count === 1 ? "" : "s"}` : "New doctor"}</span>
+            )}
+          </p>
         </div>
       </div>
 

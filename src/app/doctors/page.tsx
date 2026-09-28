@@ -19,7 +19,7 @@ export async function generateMetadata({ searchParams }: PageProps<"/doctors">):
 
   // Index the main listing and single-specialty pages; not arbitrary filter combos.
   const indexable = !filters.q && !filters.type && filters.minFee == null && filters.maxFee == null &&
-    !filters.language && !filters.available && filters.page === 1 && filters.sort === "relevance";
+    !filters.language && !filters.available && filters.minRating == null && filters.page === 1 && filters.sort === "relevance";
 
   return {
     title,

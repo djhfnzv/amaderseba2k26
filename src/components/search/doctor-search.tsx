@@ -6,6 +6,7 @@ import type { Facets } from "@/lib/search/queries";
 import {
   AVAILABILITY_OPTIONS,
   PAGE_SIZE,
+  RATING_OPTIONS,
   SORT_OPTIONS,
   TYPE_OPTIONS,
   searchQuery,
@@ -83,7 +84,7 @@ export function DoctorSearch({
   }
 
   const fee = (v: string) => (v.trim() === "" || Number.isNaN(Number(v)) ? null : Math.max(0, Math.floor(Number(v))));
-  const activeCount = [filters.specialty, filters.type, filters.minFee != null || filters.maxFee != null, filters.language, filters.city, filters.available].filter(Boolean).length;
+  const activeCount = [filters.specialty, filters.type, filters.minFee != null || filters.maxFee != null, filters.language, filters.city, filters.available, filters.minRating].filter(Boolean).length;
   const pages = Math.max(1, Math.ceil(results.total / PAGE_SIZE));
   const from = results.total === 0 ? 0 : (filters.page - 1) * PAGE_SIZE + 1;
   const to = Math.min(filters.page * PAGE_SIZE, results.total);
@@ -145,6 +146,8 @@ export function DoctorSearch({
               options={TYPE_OPTIONS.map((t) => ({ value: t.value, label: t.label }))} />
             <Select label="Available" name="available" value={filters.available ? String(filters.available) : ""} onChange={(v) => update({ available: v ? Number(v) : null })} placeholder="Any time"
               options={AVAILABILITY_OPTIONS.map((o) => ({ value: String(o.value), label: o.label }))} />
+            <Select label="Rating" name="minRating" value={filters.minRating ? String(filters.minRating) : ""} onChange={(v) => update({ minRating: v ? Number(v) : null })} placeholder="Any rating"
+              options={RATING_OPTIONS.map((o) => ({ value: String(o.value), label: o.label }))} />
 
             <fieldset>
               <legend className="mb-1.5 text-sm font-medium text-slate-800">Fee (৳)</legend>
@@ -172,7 +175,7 @@ export function DoctorSearch({
             {activeCount > 0 && (
               <button
                 type="button"
-                onClick={() => update({ specialty: "", type: "", minFee: null, maxFee: null, language: "", city: "", available: null })}
+                onClick={() => update({ specialty: "", type: "", minFee: null, maxFee: null, language: "", city: "", available: null, minRating: null })}
                 className="text-sm font-medium text-teal-700 hover:underline"
               >
                 Clear filters

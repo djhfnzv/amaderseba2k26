@@ -1,6 +1,21 @@
 import { z } from "zod";
+import { normalizeBdPhone } from "@/lib/sms/phone";
 
 const email = z.string().trim().toLowerCase().email("Enter a valid email address");
+
+/** Bangladeshi mobile number -> 8801XXXXXXXXX. */
+const mobile = z
+  .string()
+  .trim()
+  .min(1, "Enter your mobile number")
+  .transform((v, ctx) => {
+    const phone = normalizeBdPhone(v);
+    if (!phone) {
+      ctx.addIssue({ code: "custom", message: "Enter a valid Bangladeshi mobile number, e.g. 01712-345678" });
+      return z.NEVER;
+    }
+    return phone;
+  });
 
 const password = z
   .string()
@@ -13,6 +28,7 @@ export const signUpSchema = z
   .object({
     fullName: z.string().trim().min(2, "Enter your full name").max(120),
     email,
+    phone: mobile,
     role: z.enum(["patient", "doctor"], { error: "Choose an account type" }),
     password,
     confirmPassword: z.string(),

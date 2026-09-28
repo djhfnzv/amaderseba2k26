@@ -20,7 +20,7 @@ export type Facets = {
 /** Searches public (verified + active) doctors only — always as an anonymous visitor. */
 export async function searchDoctors(f: SearchFilters): Promise<SearchResult> {
   const supabase = createPublicClient();
-  const { data, error } = await supabase.rpc("search_doctors", {
+  const args = {
     p_query: f.q || null,
     p_specialty: f.specialty || null,
     p_type: f.type || null,
@@ -32,7 +32,15 @@ export async function searchDoctors(f: SearchFilters): Promise<SearchResult> {
     p_limit: PAGE_SIZE,
     p_offset: (f.page - 1) * PAGE_SIZE,
     p_available_days: f.available,
-  });
+  };
+  let { data, error } = await supabase.rpc("search_doctors", { ...args, p_min_rating: f.minRating });
+  // The M12 migration (rating filter) isn't applied yet: fall back to the older
+  // search so the site keeps working. Rating filter/sort are ignored until then.
+  if (error?.code === "PGRST202") {
+    console.warn("[searchDoctors] rating search not available yet — run the M12 migration");
+    ({ data, error } = await supabase.rpc("search_doctors", { ...args, p_sort: f.sort === "rating" ? "relevance" : f.sort }));
+    data = (data ?? []).map((d) => ({ ...d, rating_avg: d.rating_avg ?? null, review_count: d.review_count ?? 0 }));
+  }
   if (error) {
     console.error("[searchDoctors]", describeError(error));
     return { doctors: [], total: 0 };

@@ -24,6 +24,17 @@ in order: open **Supabase Dashboard → SQL Editor**, paste the file, and run it
 Sign up normally, then run [`supabase/seed/promote_admin.sql`](supabase/seed/promote_admin.sql)
 with your email in the SQL editor. Log out and back in.
 
+### Demo data (development only)
+
+```bash
+npm run seed:doctors            # 12 verified demo doctors, one per specialty (demo.<specialty>@medlife.test / DemoDoctor#2026)
+npm run seed:reviews            # 3 completed visits Mr. Patient <-> Dr. Demo, to try reviews
+npm run seed:doctors -- --remove
+npm run seed:reviews -- --remove
+```
+
+Demo bios say they are demo profiles. Both scripts refuse to run in production.
+
 ## Progress
 
 | Branch | Scope | Status |
@@ -40,11 +51,12 @@ with your email in the SQL editor. Log out and back in.
 | `feature/m8-payments` | M8 Payments (SSLCommerz) | ✅ merged |
 | `feature/m9-video-consultation` | M9 Video consultation (free WebRTC) | ✅ merged |
 | `feature/m10-prescriptions` | M10 E-prescription + advice notes | ✅ merged |
-| `feature/m11-notifications` | M11 Notifications (in-app + SMS) | ✅ |
+| `feature/m11-notifications` | M11 Notifications (in-app + SMS) | ✅ merged |
+| `feature/m12-reviews` | M12 Reviews & ratings | ✅ |
 
 ## M1 — Authentication & roles
 
-- **Sign up** (`/signup`): name, email, password, and *patient* or *doctor*. Email verification
+- **Sign up** (`/signup`): name, email, **mobile number** (Bangladeshi, one account per number), password, and *patient* or *doctor*. Email verification
   is skipped for now: the server creates an already-confirmed account and logs the user in.
 - **Log in** (`/login`), **forgot / reset password** (`/forgot-password` → email link →
   `/reset-password`), **log out**.
@@ -269,6 +281,28 @@ with your email in the SQL editor. Log out and back in.
   select vault.create_secret('https://<your-site>/api/cron/notifications', 'medlife_dispatch_url');
   select vault.create_secret('<CRON_SECRET>', 'medlife_cron_secret');
   ```
+
+## M12 — Reviews & ratings
+
+- **Patients (FR-P-12):** after a **completed** appointment, a "Rate your visit" card appears on the
+  appointment page (and a "How was your visit?" notification about a day later). 1–5 stars, optional
+  highlights (Explains clearly, On time, …) and comment (1000 chars), optional **anonymous** posting.
+  One review per visit, up to **30 days** after it; editable for **7 days**; can be deleted.
+- **Public page:** average, count and 5→1 breakdown, reviews with sort (newest / highest / lowest) and
+  "show more"; the doctor's reply under each review. Patients appear as "Rahim K." or "Anonymous
+  patient" — patient ids never leave the database. The average appears from **3 reviews**
+  ("New doctor" before that) and is added to the page's schema.org data (`aggregateRating`).
+- **Doctors (FR-D-16):** `/doctor/reviews` (all / needs a reply) — public reply (editable, removable),
+  report abusive reviews to admins (reviews can't be removed for being negative). Rating card on the
+  dashboard.
+- **Admins (FR-A-06):** `/admin/reviews` — reviews publish instantly; ones with links, contact details
+  or possible abusive words are auto-flagged, and doctor reports land in the same queue. Hide (with a
+  reason the patient sees), restore, or dismiss the flag. Every action is logged.
+- **Search:** ★ rating on doctor cards, a **Rating** filter (4.5★ / 4★ / 3★ & up) and **Top rated** sort.
+- **Notifications:** doctor ← new review; patient ← doctor replied / review hidden or restored;
+  admins ← flagged or reported review.
+- All writes go through DB functions (`save_review`, `delete_review`, `reply_to_review`,
+  `report_review`, `moderate_review`); `doctor_rating_stats` is kept up to date by a trigger.
 
 ## Project layout
 
