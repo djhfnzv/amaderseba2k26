@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { signUp } from "../actions";
 import { Field } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
+import { cancelLoginSplash, startLoginSplash } from "@/components/motion/login-splash";
 
 const ROLE_OPTIONS = [
   { value: "patient", label: "I'm a patient", hint: "Find doctors and book visits" },
@@ -15,8 +16,21 @@ export function SignupForm({ defaultRole }: { defaultRole: "patient" | "doctor" 
   const [state, action, pending] = useActionState(signUp, undefined);
   const role = state?.values?.role ?? defaultRole;
 
+  useEffect(() => {
+    if (state?.error || state?.fieldErrors) cancelLoginSplash();
+  }, [state]);
+
   return (
-    <form action={action} className="flex flex-col gap-4" noValidate>
+    <form
+      action={action}
+      onSubmit={(e) => {
+        const data = new FormData(e.currentTarget);
+        const filled = ["fullName", "email", "password"].every((k) => String(data.get(k) ?? "").trim());
+        if (filled) startLoginSplash("Setting up your account…");
+      }}
+      className="flex flex-col gap-4"
+      noValidate
+    >
       {state?.error && <Alert>{state.error}</Alert>}
 
       <fieldset>

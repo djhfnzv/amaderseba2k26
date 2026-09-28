@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth/guards";
+import { flash } from "@/lib/flash";
+import { kickSmsDispatch } from "@/lib/notifications/dispatch";
 import { processPendingRefunds } from "@/lib/payments/service";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -47,6 +49,8 @@ export async function setUserStatus(_prev: FormState, formData: FormData): Promi
     return { error: expected ? error.message : "Could not update the account. Please try again.", values: raw };
   }
 
+  kickSmsDispatch();
+
   // 2) Defence in depth: stop the account from signing in or refreshing its session.
   const admin = createAdminClient();
   const { error: banError } = await admin.auth.admin.updateUserById(userId, {
@@ -61,6 +65,7 @@ export async function setUserStatus(_prev: FormState, formData: FormData): Promi
   revalidatePath("/doctors");
   revalidatePath("/doctors/[slug]", "page");
 
+  await flash(status === "active" ? "Account reactivated" : "Account suspended");
   if (status === "active") return { message: "Account reactivated. The user can log in again." };
   return {
     message:

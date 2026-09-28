@@ -1,5 +1,6 @@
 import "server-only";
 import { env } from "@/lib/env";
+import { kickSmsDispatch } from "@/lib/notifications/dispatch";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { PaymentProvider } from "@/types/database";
@@ -115,6 +116,7 @@ export async function handleGatewayCallback(
     console.error("[complete_payment]", tranId, error);
     return { appointmentId: payment.appointment_id, result: "failed" };
   }
+  kickSmsDispatch();
 
   if (done[0].needs_refund) {
     await refundAppointment(done[0].appointment_id);
@@ -135,6 +137,7 @@ async function sendRefund(ticket: { refund_id: string; amount: number; bank_tran
     refundId: ticket.refund_id,
     remarks: "MedLife appointment cancelled",
   });
+  kickSmsDispatch();
   await admin.rpc("finish_refund", {
     p_refund: ticket.refund_id,
     p_success: res.ok,

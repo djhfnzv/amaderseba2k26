@@ -1,17 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { signIn } from "../actions";
 import { Field } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
+import { cancelLoginSplash, startLoginSplash } from "@/components/motion/login-splash";
 
 export function LoginForm({ next }: { next?: string }) {
   const [state, action, pending] = useActionState(signIn, undefined);
 
+  // Login failed: bring the form back from under the splash.
+  useEffect(() => {
+    if (state?.error || state?.fieldErrors) cancelLoginSplash();
+  }, [state]);
+
   return (
-    <form action={action} className="flex flex-col gap-4" noValidate>
+    <form
+      action={action}
+      onSubmit={(e) => {
+        const data = new FormData(e.currentTarget);
+        if (String(data.get("email") ?? "").trim() && String(data.get("password") ?? "")) startLoginSplash();
+      }}
+      className="flex flex-col gap-4"
+      noValidate
+    >
       {state?.error && <Alert>{state.error}</Alert>}
       {next && <input type="hidden" name="next" value={next} />}
 

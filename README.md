@@ -39,7 +39,8 @@ with your email in the SQL editor. Log out and back in.
 | `feature/m13-admin-users` | M13 (basic) Admin user management | ✅ merged |
 | `feature/m8-payments` | M8 Payments (SSLCommerz) | ✅ merged |
 | `feature/m9-video-consultation` | M9 Video consultation (free WebRTC) | ✅ merged |
-| `feature/m10-prescriptions` | M10 E-prescription + advice notes | ✅ |
+| `feature/m10-prescriptions` | M10 E-prescription + advice notes | ✅ merged |
+| `feature/m11-notifications` | M11 Notifications (in-app + SMS) | ✅ |
 
 ## M1 — Authentication & roles
 
@@ -229,6 +230,45 @@ with your email in the SQL editor. Log out and back in.
   controlled drugs. Add brands via CSV.
 - **Retention:** signed prescriptions can't be deleted. A doctor with signed prescriptions can't be
   hard-deleted (suspend instead).
+
+## M11 — Notifications (in-app + SMS)
+
+- **In-app:** a bell with an unread count in every dashboard (live via Supabase Realtime), a dropdown
+  of the latest items and a full page at `/patient|doctor|admin/notifications` (all / unread, mark
+  all read). Clicking a notification marks it read and opens what it's about.
+- **What notifies (DB triggers, so every path is covered):** booking confirmed / payment due /
+  payment received, cancelled, rescheduled, online consultation started ("join now"), missed,
+  expired, refund issued; prescription signed or updated; advice sent; verification approved /
+  rejected / revoked (doctor); new verification request (admins).
+- **Changes that affect someone else** (migration `20261007000002`): a patient adding or deleting a
+  report notifies doctors they are about to see; doctor leave or changed hours that clash with a
+  booking notify that patient (+ SMS) and the doctor (checked at commit, so replacing a day's hours
+  doesn't cause false alarms); fee changes, chamber edits (+ SMS) or removal notify booked patients;
+  saving or discarding a prescription draft tells the patient (at most once per 30 min per draft).
+- **Your own actions** (saved, edited, deleted, booked, cancelled…) show a pop-up with the chime —
+  not stored in the list. Server actions call `flash()` (`src/lib/flash.ts`).
+- **Sound & pop-ups:** new notifications play a short chime (can be muted from the bell) and pop up
+  in the corner; the notifications page refreshes itself. Polling every 45 s backs up Realtime.
+- **Reminders (FR-P-07):** 24 hours and 1 hour before each confirmed appointment (skipped when it
+  was booked too recently for them to make sense).
+- **SMS (BulkSMSBD):** patients and doctors add a Bangladeshi mobile number on their notifications
+  page and confirm it with a 6-digit code (60-second resend, 5 codes a day, 5 tries). They can turn
+  SMS off or remove the number. Texts are plain English and never include diagnoses or medicines.
+  Messages are queued in `sms_outbox`, sent right after the action and retried (2, 4, 8 min) if
+  the gateway fails; stale ones (e.g. a reminder after the start time) are cancelled.
+- **Admin** `/admin/sms`: queued / sent / failed / cancelled, gateway mode and balance, "Send queued
+  now", retry failed.
+- **Config (.env.local + Vercel):** `SMS_PROVIDER=bulksmsbd`, `BULKSMSBD_API_KEY`,
+  `BULKSMSBD_SENDER_ID`, `CRON_SECRET`. Without them SMS runs in test mode (recorded, not sent; the
+  verification code is shown on screen).
+- **Scheduler:** the migration enables `pg_cron` + `pg_net` and runs `run_notification_jobs()` every
+  minute (expire unpaid bookings, queue reminders, wake the SMS sender). Tell it where the site is
+  by running this once in the SQL editor, with the deployed URL and your `CRON_SECRET`:
+
+  ```sql
+  select vault.create_secret('https://<your-site>/api/cron/notifications', 'medlife_dispatch_url');
+  select vault.create_secret('<CRON_SECRET>', 'medlife_cron_secret');
+  ```
 
 ## Project layout
 

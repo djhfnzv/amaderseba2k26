@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentUser, requireUser } from "@/lib/auth/guards";
+import { flash } from "@/lib/flash";
+import { kickSmsDispatch } from "@/lib/notifications/dispatch";
 import { refundAppointment, startPaymentFor } from "@/lib/payments/service";
 import { createClient } from "@/lib/supabase/server";
 import type { FormState } from "@/lib/validation/form-state";
@@ -71,9 +73,11 @@ export async function confirmBooking(_prev: FormState, formData: FormData): Prom
     p_pay_at_chamber: payAtChamber,
   });
   if (error || !appointmentId) return { error: error ? friendly(error, "confirmBooking") : "Could not confirm." };
+  kickSmsDispatch();
   revalidateAppointments();
 
   const { data: appt } = await supabase.from("appointments").select("status").eq("id", appointmentId).single();
+  if (appt?.status !== "pending_payment") await flash("Appointment booked");
   if (appt?.status !== "pending_payment") redirect(`/patient/appointments/${appointmentId}?booked=1`);
 
   // Online payment: go straight to the gateway. If that fails, the patient can retry from the appointment page.
@@ -101,6 +105,7 @@ export async function releaseHold(formData: FormData): Promise<void> {
     const supabase = await createClient();
     await supabase.rpc("release_hold", { p_hold: holdId });
   }
+  await flash("Booking cancelled — the slot was released", "info");
   // Holds belong to patients, so return to the in-dashboard doctor page.
   redirect(SLUG.test(slug) ? `/patient/doctors/${slug}` : "/patient/doctors");
 }
@@ -117,11 +122,13 @@ export async function cancelAppointment(_prev: FormState, formData: FormData): P
   const supabase = await createClient();
   const { error } = await supabase.rpc("cancel_appointment", { p_id: id, p_reason: reason || null });
   if (error) return { error: friendly(error, "cancelAppointment"), values: { reason } };
+  kickSmsDispatch();
 
   // Paid online? Issue the refund the policy allows.
   await refundAppointment(id);
 
   revalidateAppointments();
+  await flash("Appointment cancelled");
   return { message: "The appointment has been cancelled. Any refund due is on its way." };
 }
 
@@ -134,8 +141,10 @@ export async function rescheduleAppointment(_prev: FormState, formData: FormData
   const supabase = await createClient();
   const { error } = await supabase.rpc("reschedule_appointment", { p_id: id, p_new_start: slotStart });
   if (error) return { error: friendly(error, "rescheduleAppointment") };
+  kickSmsDispatch();
 
   revalidateAppointments();
+  await flash("Appointment rescheduled");
   return { message: "Rescheduled. Both you and the other party can see the new time." };
 }
 
@@ -151,7 +160,9 @@ export async function updateAppointmentStatus(_prev: FormState, formData: FormDa
     p_action: action as "start" | "complete" | "no_show",
   });
   if (error) return { error: friendly(error, "updateAppointmentStatus") };
+  kickSmsDispatch();
 
   revalidateAppointments();
+  await flash(action === "start" ? "Consultation started" : action === "complete" ? "Marked as completed" : "Marked as no-show");
   return { message: action === "start" ? "Consultation started." : action === "complete" ? "Marked as completed." : "Marked as no-show." };
 }

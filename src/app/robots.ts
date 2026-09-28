@@ -20,6 +20,7 @@ export default function robots(): MetadataRoute.Robots {
         "/prescriptions/",
         "/verify/",
         "/consult",
+        "/notifications/",
         "/api/",
         "/reset-password",
         "/suspended",

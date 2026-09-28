@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/guards";
+import { flash } from "@/lib/flash";
 import { createClient } from "@/lib/supabase/server";
 import { availabilitySchema, leaveSchema } from "@/lib/validation/schedule";
 import { fieldErrorsOf, formToObject, type FormState } from "@/lib/validation/form-state";
@@ -27,6 +28,7 @@ export async function saveTimezone(_prev: FormState, formData: FormData): Promis
     return { error: error.code === "22023" ? "That time zone isn't recognised." : "Could not save. Please try again." };
   }
   await revalidateSchedule(user.id);
+  await flash("Time zone saved");
   return { message: "Time zone saved." };
 }
 
@@ -67,6 +69,7 @@ export async function addAvailability(_prev: FormState, formData: FormData): Pro
   }
 
   await revalidateSchedule(user.id);
+  await flash(rows.length > 1 ? `Hours added to ${rows.length} days` : "Hours added");
   return { message: rows.length > 1 ? `Added to ${rows.length} days.` : "Added." };
 }
 
@@ -83,6 +86,7 @@ export async function toggleAvailability(formData: FormData): Promise<void> {
     .eq("id", id)
     .eq("doctor_id", user.id);
   if (error && error.code !== "23P01") console.error("[toggleAvailability]", error);
+  if (!error) await flash(active ? "Hours resumed" : "Hours paused");
   await revalidateSchedule(user.id);
 }
 
@@ -94,6 +98,7 @@ export async function deleteAvailability(formData: FormData): Promise<void> {
   const supabase = await createClient();
   const { error } = await supabase.from("doctor_availability").delete().eq("id", id).eq("doctor_id", user.id);
   if (error) console.error("[deleteAvailability]", error);
+  else await flash("Hours deleted");
   await revalidateSchedule(user.id);
 }
 
@@ -123,6 +128,7 @@ export async function addLeave(_prev: FormState, formData: FormData): Promise<Fo
   }
 
   await revalidateSchedule(user.id);
+  await flash("Leave added");
   return { message: "Leave added. Those slots are no longer bookable." };
 }
 
@@ -134,6 +140,7 @@ export async function deleteLeave(formData: FormData): Promise<void> {
   const supabase = await createClient();
   const { error } = await supabase.from("doctor_leaves").delete().eq("id", id).eq("doctor_id", user.id);
   if (error) console.error("[deleteLeave]", error);
+  else await flash("Leave removed");
   await revalidateSchedule(user.id);
 }
 
@@ -171,6 +178,7 @@ export async function updateAvailability(_prev: FormState, formData: FormData): 
   }
 
   await revalidateSchedule(user.id);
+  await flash("Hours saved");
   return { message: "Saved." };
 }
 
@@ -193,5 +201,6 @@ export async function copyDay(_prev: FormState, formData: FormData): Promise<For
   }
 
   await revalidateSchedule(user.id);
+  await flash(`Hours copied to ${to.length} day${to.length === 1 ? "" : "s"}`);
   return { message: `Copied to ${to.length} day${to.length === 1 ? "" : "s"}.` };
 }

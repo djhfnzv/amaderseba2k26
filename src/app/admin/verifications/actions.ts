@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth/guards";
+import { flash } from "@/lib/flash";
+import { kickSmsDispatch } from "@/lib/notifications/dispatch";
 import { createClient } from "@/lib/supabase/server";
 import { formToObject, type FormState } from "@/lib/validation/form-state";
 
@@ -44,6 +46,8 @@ export async function reviewRequest(_prev: FormState, formData: FormData): Promi
     return { error: friendly ? `${error.message}.` : "Could not save the decision. Please try again.", values: raw };
   }
 
+  await flash(decision === "approve" ? "Doctor approved" : decision === "reject" ? "Verification rejected" : "Verification revoked");
+  kickSmsDispatch();
   revalidatePath("/admin", "layout");
   revalidatePath("/doctor", "layout");
   revalidatePath("/doctors/[slug]", "page");

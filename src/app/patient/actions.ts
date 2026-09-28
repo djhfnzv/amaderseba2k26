@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth/guards";
 import { isDocumentMime } from "@/lib/files";
+import { flash } from "@/lib/flash";
 import { createClient } from "@/lib/supabase/server";
 import {
   ALLOWED_FILE_TYPES,
@@ -69,6 +70,7 @@ export async function saveHealthProfile(
 
   // First-time setup continues to the optional reports step.
   if (raw.welcome === "1") redirect("/patient/records?welcome=1");
+  await flash("Health profile saved");
   return { message: "Your health profile has been saved." };
 }
 
@@ -152,6 +154,7 @@ export async function saveMedicalFile(
   }
 
   revalidatePath("/patient", "layout");
+  await flash("Report uploaded");
   return { message: `"${f.title}" was uploaded.` };
 }
 
@@ -172,6 +175,7 @@ export async function deleteMedicalFile(formData: FormData): Promise<void> {
   const { error } = await supabase.from("medical_files").delete().eq("id", file.id);
   if (!error) {
     await supabase.storage.from(MEDICAL_FILES_BUCKET).remove([file.storage_path]);
+    await flash("Report deleted");
   }
 
   revalidatePath("/patient", "layout");

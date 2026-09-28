@@ -3,6 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/guards";
+import { flash } from "@/lib/flash";
 import {
   DOCTOR_PHOTOS_BUCKET,
   MAX_PHOTO_BYTES,
@@ -100,6 +101,7 @@ export async function saveBasicInfo(_prev: FormState, formData: FormData): Promi
   }
 
   revalidatePortfolio(oldSlug, v.slug);
+  await flash("Profile saved");
   return { message: "Your details have been saved." };
 }
 
@@ -151,6 +153,7 @@ export async function saveSectionItem(
   }
 
   revalidatePortfolio(await currentSlug(user.id));
+  await flash(id ? "Changes saved" : "Added to your portfolio");
   return { message: id ? "Updated." : "Added." };
 }
 
@@ -167,6 +170,7 @@ export async function deleteSectionItem(section: SectionKey, formData: FormData)
     .eq("id", id)
     .eq("doctor_id", user.id);
   if (error) console.error(`[deleteSectionItem ${section}]`, error);
+  else await flash("Deleted");
 
   revalidatePortfolio(await currentSlug(user.id));
 }
@@ -228,6 +232,7 @@ export async function savePhoto(path: string): Promise<{ error?: string }> {
   if (profile?.photo_path && profile.photo_path !== path) {
     await bucket.remove([profile.photo_path]);
   }
+  await flash("Photo updated");
   revalidatePortfolio(profile?.slug);
   return {};
 }
@@ -244,5 +249,6 @@ export async function removePhoto(): Promise<void> {
 
   await supabase.from("doctor_profiles").update({ photo_path: null }).eq("user_id", user.id);
   await supabase.storage.from(DOCTOR_PHOTOS_BUCKET).remove([profile.photo_path]);
+  await flash("Photo removed");
   revalidatePortfolio(profile.slug);
 }

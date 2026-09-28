@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AuthLink } from "@/components/motion/auth-transition";
 import { SearchBar } from "@/components/search/search-bar";
 import { site } from "@/lib/site";
 import {
@@ -34,12 +35,12 @@ export function Hero() {
           </div>
 
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-            <Link
+            <AuthLink
               href={site.signupHref}
               className="inline-flex h-12 items-center justify-center rounded-lg bg-teal-700 px-6 font-semibold text-white shadow-sm transition-colors hover:bg-teal-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
             >
               Get started
-            </Link>
+            </AuthLink>
             <Link
               href="/doctors"
               className="inline-flex h-12 items-center justify-center rounded-lg border border-slate-300 bg-white px-6 font-semibold text-slate-800 transition-colors hover:bg-slate-50"

@@ -8,6 +8,7 @@ import { LocalTime } from "@/components/ui/local-time";
 import { requireUser } from "@/lib/auth/guards";
 import { getIceServers } from "@/lib/consult/ice";
 import { ageFromDob, formatDate } from "@/lib/format";
+import { kickSmsDispatch } from "@/lib/notifications/dispatch";
 import { FILE_CATEGORY_LABEL, SEX_OPTIONS } from "@/lib/patient/constants";
 import { createClient } from "@/lib/supabase/server";
 
@@ -24,6 +25,8 @@ export default async function ConsultPage({ params }: PageProps<"/consult/[appoi
   const { data: rows, error } = await supabase.rpc("open_consultation", { p_appointment: appointmentId });
   if (error?.code === "P0002") notFound();
   const room = rows?.[0];
+  // The doctor arriving notifies the patient (SMS goes out after the response).
+  if (user.role === "doctor" && room?.room_status === "open") kickSmsDispatch();
 
   const doneHref = user.role === "doctor" ? `/doctor/appointments/${appointmentId}` : `/patient/appointments/${appointmentId}`;
 
@@ -147,11 +150,13 @@ export default async function ConsultPage({ params }: PageProps<"/consult/[appoi
 
 /** Dark, distraction-free frame for the call. */
 function Shell({ children, doneHref, fullBleed, title }: { children: React.ReactNode; doneHref: string; fullBleed?: boolean; title?: string }) {
+  // The logo leads back to the dashboard home (/doctor or /patient), not the landing page.
+  const homeHref = doneHref.startsWith("/doctor") ? "/doctor" : "/patient";
   return (
     <div className="flex h-dvh flex-col bg-slate-900 text-white">
       <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-white/10 px-4">
         <div className="flex min-w-0 items-center gap-3">
-          <Logo tone="light" />
+          <Logo tone="light" href={homeHref} />
           {title && <span className="hidden truncate text-sm text-slate-300 sm:inline">· {title}</span>}
         </div>
         <Link href={doneHref} className="shrink-0 text-sm text-slate-300 hover:text-white">

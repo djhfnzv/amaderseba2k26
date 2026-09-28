@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { AuthLink } from "@/components/motion/auth-transition";
 import { site } from "@/lib/site";
 import { CheckIcon, StethoscopeIcon } from "./icons";
 
@@ -25,12 +25,12 @@ export function ForDoctors() {
             <p className="mt-4 text-lg text-teal-50">
               Build your verified e-portfolio, reach more patients and run your practice online.
             </p>
-            <Link
+            <AuthLink
               href={site.doctorSignupHref}
               className="mt-8 inline-flex h-12 items-center justify-center rounded-lg bg-white px-6 font-semibold text-teal-800 transition-colors hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
               Join as a doctor
-            </Link>
+            </AuthLink>
           </div>
           <ul className="flex flex-col gap-4">
             {benefits.map((b) => (

@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/guards";
 import { DOCUMENT_TYPES, MAX_DOCUMENT_BYTES, isDocumentMime } from "@/lib/files";
+import { flash } from "@/lib/flash";
 import { createClient } from "@/lib/supabase/server";
 import type { ConsultationMessage } from "@/types/database";
 
@@ -110,6 +111,7 @@ export async function endConsultation(appointmentId: string): Promise<Result<nul
   const supabase = await createClient();
   const { error } = await supabase.rpc("end_consultation", { p_appointment: appointmentId });
   if (error) return { ok: false, error: "Could not end the consultation. Please try again." };
+  await flash("Consultation ended");
   revalidatePath("/doctor", "layout");
   revalidatePath("/patient", "layout");
   return { ok: true, data: null };
