@@ -6,6 +6,7 @@ import { z } from "zod";
 import { requireRole } from "@/lib/auth/guards";
 import { getOrCreateOwnProfile } from "@/lib/doctor/queries";
 import { DOCUMENT_TYPES, MAX_DOCUMENT_BYTES, isDocumentMime } from "@/lib/files";
+import { flash } from "@/lib/flash";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_DOCUMENTS, VERIFICATION_BUCKET, isEditable } from "@/lib/verification/constants";
 import { getOrCreateOwnRequest } from "@/lib/verification/queries";
@@ -108,6 +109,7 @@ export async function saveVerificationDocument(
   }
 
   revalidate();
+  await flash("Document uploaded");
   return { message: "Document uploaded." };
 }
 
@@ -132,6 +134,7 @@ export async function deleteVerificationDocument(formData: FormData): Promise<vo
     .eq("id", doc.id);
   if (!error && count) {
     await supabase.storage.from(VERIFICATION_BUCKET).remove([doc.storage_path]);
+    await flash("Document deleted");
   }
   revalidate();
 }
@@ -153,5 +156,6 @@ export async function submitForReview(): Promise<FormState> {
   }
 
   revalidate();
+  await flash("Submitted for review");
   return { message: "Submitted! An admin will review your documents soon." };
 }

@@ -1,3 +1,4 @@
+import { ViewTransition } from "react";
 import { Faq } from "@/components/landing/faq";
 import { Features } from "@/components/landing/features";
 import { ForDoctors } from "@/components/landing/for-doctors";
@@ -9,18 +10,25 @@ import { Specialties } from "@/components/landing/specialties";
 
 export default function Home() {
   return (
-    <>
-      <SiteHeader />
-      <main className="flex-1">
-        <Hero />
-        <Features />
-        <HowItWorks />
-        <Specialties />
-        <ForDoctors />
-        <Faq />
-      </main>
-      <EmergencyNotice />
-      <SiteFooter />
-    </>
+    // Leaving for log in / sign up (or coming back) animates the whole page.
+    <ViewTransition
+      enter={{ "from-auth": "landing-in", default: "none" }}
+      exit={{ "to-auth": "landing-out", default: "none" }}
+      default="none"
+    >
+      <div className="flex flex-1 flex-col">
+        <SiteHeader />
+        <main className="flex-1">
+          <Hero />
+          <Features />
+          <HowItWorks />
+          <Specialties />
+          <ForDoctors />
+          <Faq />
+        </main>
+        <EmergencyNotice />
+        <SiteFooter />
+      </div>
+    </ViewTransition>
   );
 }

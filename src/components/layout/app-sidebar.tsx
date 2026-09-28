@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { signOut } from "@/app/(auth)/actions";
 import { Logo } from "@/components/landing/logo";
+import { startLogoutSplash } from "@/components/motion/login-splash";
+import { NotificationBell, NotificationCenter } from "@/components/notifications/notification-center";
 import { NavIconSvg, type NavIcon } from "./nav-icons";
 
 export type NavItem = {
@@ -19,6 +21,11 @@ export type NavItem = {
 
 type Props = {
   nav: NavItem[];
+  userId: string;
+  /** Dashboard home for this role: where the logo leads. */
+  homeHref: string;
+  unread: number;
+  notificationsHref: string;
   userName: string;
   roleLabel: string;
 };
@@ -76,7 +83,7 @@ function Account({ userName, roleLabel }: { userName: string; roleLabel: string 
         <p className="truncate text-sm font-medium text-slate-900">{userName}</p>
         <p className="text-xs text-slate-500">{roleLabel}</p>
       </div>
-      <form action={signOut}>
+      <form action={signOut} onSubmit={() => startLogoutSplash()}>
         <button
           type="submit"
           className="rounded-md px-2 py-1 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-900"
@@ -89,15 +96,16 @@ function Account({ userName, roleLabel }: { userName: string; roleLabel: string 
 }
 
 /** Left sidebar on desktop; top bar + slide-out menu on phones and tablets. */
-export function AppSidebar({ nav, userName, roleLabel }: Props) {
+export function AppSidebar({ nav, userId, homeHref, unread, notificationsHref, userName, roleLabel }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
-    <>
+    <NotificationCenter userId={userId} initialUnread={unread} href={notificationsHref}>
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-slate-200 bg-white lg:flex print:hidden">
-        <div className="flex h-16 items-center px-5">
-          <Logo />
+        <div className="flex h-16 items-center justify-between pr-3 pl-5">
+          <Logo href={homeHref} />
+          <NotificationBell align="left" />
         </div>
         <nav aria-label="Main" className="flex-1 overflow-y-auto px-3 py-4">
           <NavList nav={nav} />
@@ -109,19 +117,22 @@ export function AppSidebar({ nav, userName, roleLabel }: Props) {
 
       {/* Mobile / tablet top bar */}
       <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur lg:hidden print:hidden">
-        <Logo />
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          aria-expanded={open}
-          aria-controls="mobile-menu"
-          className="grid size-10 place-items-center rounded-lg text-slate-700 hover:bg-slate-100"
-        >
-          <span className="sr-only">Open menu</span>
-          <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden="true">
-            <path d="M4 7h16M4 12h16M4 17h16" />
-          </svg>
-        </button>
+        <Logo href={homeHref} />
+        <div className="flex items-center gap-1">
+          <NotificationBell />
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            aria-expanded={open}
+            aria-controls="mobile-menu"
+            className="grid size-10 place-items-center rounded-lg text-slate-700 hover:bg-slate-100"
+          >
+            <span className="sr-only">Open menu</span>
+            <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+          </button>
+        </div>
       </header>
 
       {/* Slide-out menu */}
@@ -135,7 +146,9 @@ export function AppSidebar({ nav, userName, roleLabel }: Props) {
           />
           <div id="mobile-menu" className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] animate-slide-in-left flex-col bg-white shadow-xl">
             <div className="flex h-14 items-center justify-between px-4">
-              <Logo />
+              <span className="contents" onClickCapture={() => setOpen(false)}>
+                <Logo href={homeHref} />
+              </span>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
@@ -156,6 +169,6 @@ export function AppSidebar({ nav, userName, roleLabel }: Props) {
           </div>
         </div>
       )}
-    </>
+    </NotificationCenter>
   );
 }

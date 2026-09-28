@@ -516,6 +516,57 @@ export type VerifyResult =
       items: { name: string; dose: string | null; duration: string | null }[];
     };
 
+export type SmsStatus = "pending" | "sending" | "sent" | "failed" | "cancelled";
+
+type NotificationRow = {
+  id: string;
+  user_id: string;
+  kind: string;
+  title: string;
+  body: string | null;
+  link: string | null;
+  dedupe_key: string | null;
+  read_at: string | null;
+  created_at: string;
+};
+
+type NotificationPreferencesRow = {
+  user_id: string;
+  sms_enabled: boolean;
+  sms_phone: string | null;
+  sms_phone_verified_at: string | null;
+  updated_at: string;
+};
+
+type SmsVerificationRow = {
+  user_id: string;
+  phone: string;
+  code_hash: string;
+  expires_at: string;
+  attempts: number;
+  sends_in_window: number;
+  window_started_at: string;
+  last_sent_at: string;
+};
+
+type SmsOutboxRow = {
+  id: string;
+  user_id: string | null;
+  notification_id: string | null;
+  phone: string;
+  body: string;
+  status: SmsStatus;
+  attempts: number;
+  provider: string | null;
+  provider_ref: string | null;
+  error: string | null;
+  not_before: string;
+  expires_at: string | null;
+  claimed_at: string | null;
+  sent_at: string | null;
+  created_at: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -664,6 +715,25 @@ export type Database = {
         Update: never;
         Relationships: [];
       };
+      notifications: { Row: NotificationRow; Insert: never; Update: never; Relationships: [] };
+      notification_preferences: {
+        Row: NotificationPreferencesRow;
+        Insert: Pick<NotificationPreferencesRow, "user_id"> & Partial<Omit<NotificationPreferencesRow, "user_id">>;
+        Update: Partial<Omit<NotificationPreferencesRow, "user_id">>;
+        Relationships: [];
+      };
+      sms_verifications: {
+        Row: SmsVerificationRow;
+        Insert: Pick<SmsVerificationRow, "user_id" | "phone" | "code_hash" | "expires_at"> & Partial<SmsVerificationRow>;
+        Update: Partial<Omit<SmsVerificationRow, "user_id">>;
+        Relationships: [];
+      };
+      sms_outbox: {
+        Row: SmsOutboxRow;
+        Insert: never;
+        Update: Partial<Pick<SmsOutboxRow, "status" | "provider" | "provider_ref" | "error" | "not_before" | "sent_at" | "attempts">>;
+        Relationships: [];
+      };
       verification_events: {
         Row: VerificationEventRow;
         Insert: never;
@@ -729,6 +799,10 @@ export type Database = {
       sign_prescription: { Args: { p_id: string }; Returns: string };
       amend_prescription: { Args: { p_id: string }; Returns: string };
       verify_prescription: { Args: { p_code: string }; Returns: VerifyResult };
+      mark_notifications_read: { Args: { p_ids?: string[] | null }; Returns: number };
+      claim_sms: { Args: { p_limit?: number }; Returns: SmsOutboxRow[] };
+      queue_appointment_reminders: { Args: Record<string, never>; Returns: number };
+      run_notification_jobs: { Args: Record<string, never>; Returns: undefined };
       get_available_slots: {
         Args: { p_doctor: string; p_from?: string | null; p_days?: number; p_type?: ConsultationType | null };
         Returns: AvailableSlot[];
@@ -798,3 +872,6 @@ export type PrescriptionItem = PrescriptionItemRow;
 export type PrescriptionTest = PrescriptionTestRow;
 export type PrescriptionTemplate = PrescriptionTemplateRow;
 export type DoctorAdvice = DoctorAdviceRow;
+export type AppNotification = NotificationRow;
+export type NotificationPreferences = NotificationPreferencesRow;
+export type SmsOutbox = SmsOutboxRow;

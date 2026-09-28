@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth/guards";
+import { flash } from "@/lib/flash";
 import { medicineKey, readMedicineCsv } from "@/lib/prescriptions/csv";
 import { createClient } from "@/lib/supabase/server";
 import { fieldErrorsOf, formToObject, publicValues, type FormState } from "@/lib/validation/form-state";
@@ -35,6 +36,7 @@ export async function addMedicine(_prev: FormState, formData: FormData): Promise
     return { error: "Could not add the medicine.", values: publicValues(values) };
   }
   revalidatePath("/admin/medicines");
+  await flash("Medicine added");
   return { message: `Added ${parsed.data.brand_name ?? parsed.data.generic_name}.` };
 }
 
@@ -48,6 +50,7 @@ export async function updateMedicineFlag(formData: FormData): Promise<void> {
   const supabase = await createClient();
   const { error } = await supabase.from("medicines").update(flag === "is_active" ? { is_active: value } : { is_controlled: value }).eq("id", id);
   if (error) console.error("[updateMedicineFlag]", error.message);
+  else await flash("Medicine updated");
   revalidatePath("/admin/medicines");
 }
 
@@ -92,6 +95,7 @@ export async function importMedicines(_prev: FormState, formData: FormData): Pro
   }
 
   revalidatePath("/admin/medicines");
+  await flash(`Imported ${added} medicine${added === 1 ? "" : "s"}`);
   const skipped = rows.length - fresh.length;
   const notes = [skipped ? `${skipped} already listed` : null, errors.length ? `${errors.length} rows had problems` : null]
     .filter(Boolean)

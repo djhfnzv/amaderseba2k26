@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AuthLink } from "@/components/motion/auth-transition";
 import { navLinks, site } from "@/lib/site";
 import { Logo } from "./logo";
 
@@ -20,12 +21,12 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <Link
+        <AuthLink
           href={site.loginHref}
           className="inline-flex h-10 items-center justify-center rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-teal-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
         >
           Log in / Sign up
-        </Link>
+        </AuthLink>
       </div>
     </header>
   );

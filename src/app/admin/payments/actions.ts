@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth/guards";
+import { flash } from "@/lib/flash";
 import { processPendingRefunds, retryRefund } from "@/lib/payments/service";
 import { createClient } from "@/lib/supabase/server";
 import { fieldErrorsOf, formToObject, type FormState } from "@/lib/validation/form-state";
@@ -40,6 +41,7 @@ export async function saveSettings(_prev: FormState, formData: FormData): Promis
     return { error: "Could not save the settings.", values: raw };
   }
   revalidatePath("/", "layout");
+  await flash("Settings saved");
   return { message: "Settings saved. They apply to new payments and cancellations." };
 }
 
@@ -76,6 +78,7 @@ export async function recordPayout(_prev: FormState, formData: FormData): Promis
   }
   revalidatePath("/admin", "layout");
   revalidatePath("/doctor", "layout");
+  await flash("Payout recorded");
   return { message: "Payout recorded." };
 }
 
@@ -88,6 +91,7 @@ export async function retryRefundAction(_prev: FormState, formData: FormData): P
   if (!/^[0-9a-f-]{36}$/i.test(id)) return { error: "Invalid refund." };
   const res = await retryRefund(id);
   revalidatePath("/admin/payments");
+  if (res.ok) await flash("Refund sent to the gateway");
   return res.ok ? { message: "Refund sent to the gateway." } : { error: res.error ?? "Retry failed." };
 }
 
@@ -95,5 +99,6 @@ export async function retryRefundAction(_prev: FormState, formData: FormData): P
 export async function catchUpRefunds(): Promise<void> {
   await requireRole("admin");
   await processPendingRefunds();
+  await flash("Pending refunds processed");
   revalidatePath("/admin/payments");
 }

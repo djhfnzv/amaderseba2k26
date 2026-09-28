@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth/guards";
+import { flash } from "@/lib/flash";
+import { kickSmsDispatch } from "@/lib/notifications/dispatch";
 import { allergyWarnings, notesToFields, type AllergyWarning } from "@/lib/prescriptions/constants";
 import { getPatientSnapshot } from "@/lib/prescriptions/queries";
 import { draftSchema, templateSchema, type DraftInput } from "@/lib/prescriptions/schema";
@@ -99,6 +101,7 @@ export async function createPrescription(_prev: FormState, formData: FormData): 
 
   const { data, error } = await supabase.from("prescriptions").insert(insert).select("id").single();
   if (error || !data) return { error: error ? friendly(error, "createPrescription") : "Could not start the prescription." };
+  await flash("Prescription draft started");
   revalidateRx();
   redirect(`/doctor/prescriptions/${data.id}`);
 }
@@ -139,6 +142,7 @@ export async function saveDraft(id: string, input: DraftInput): Promise<Result<s
   await requireRole("doctor");
   const res = await writeDraft(id, input);
   if (!res.ok) return res;
+  await flash("Draft saved");
   revalidatePath(`/doctor/prescriptions/${id}`);
   return { ok: true, data: new Date().toISOString() };
 }
@@ -165,6 +169,8 @@ export async function signPrescription(
 
   const { data: code, error } = await supabase.rpc("sign_prescription", { p_id: id });
   if (error || !code) return { ok: false, error: error ? friendly(error, "signPrescription") : "Could not sign." };
+  kickSmsDispatch();
+  await flash("Prescription signed and sent");
   revalidateRx();
   return { ok: true, data: code };
 }
@@ -179,6 +185,7 @@ export async function amendPrescription(formData: FormData): Promise<void> {
     if (error) console.error("[amendPrescription]", error.message);
     redirect(`/doctor/prescriptions/${id}?error=amend`);
   }
+  await flash("Amendment started — edit and sign the new version", "info");
   revalidateRx();
   redirect(`/doctor/prescriptions/${data}`);
 }
@@ -191,6 +198,7 @@ export async function deleteDraft(formData: FormData): Promise<void> {
   const { data } = await supabase.from("prescriptions").select("parent_id").eq("id", id).maybeSingle();
   const { error } = await supabase.from("prescriptions").delete().eq("id", id).eq("status", "draft");
   if (error) console.error("[deleteDraft]", error.message);
+  else await flash("Draft deleted");
   revalidateRx();
   redirect(data?.parent_id ? `/doctor/prescriptions/${data.parent_id}` : "/doctor/prescriptions");
 }
@@ -211,6 +219,7 @@ export async function saveTemplate(name: string, payload: unknown): Promise<Resu
     .select("*")
     .single();
   if (error || !data) return { ok: false, error: error ? friendly(error, "saveTemplate") : "Could not save the template." };
+  await flash("Template saved");
   return { ok: true, data };
 }
 
@@ -220,6 +229,7 @@ export async function deleteTemplate(id: string): Promise<Result<null>> {
   const supabase = await createClient();
   const { error } = await supabase.from("prescription_templates").delete().eq("id", id);
   if (error) return { ok: false, error: friendly(error, "deleteTemplate") };
+  await flash("Template deleted");
   return { ok: true, data: null };
 }
 
@@ -247,6 +257,7 @@ export async function addCustomMedicine(input: z.input<typeof customMedicineSche
     .select("*")
     .single();
   if (error || !data) return { ok: false, error: error ? friendly(error, "addCustomMedicine") : "Could not add the medicine." };
+  await flash("Medicine added to your list");
   return { ok: true, data };
 }
 
@@ -274,5 +285,6 @@ export async function sendAdvice(_prev: FormState, formData: FormData): Promise<
     return { error: "Could not send the advice. You can only advise your own patients." };
   }
   revalidateRx();
+  await flash("Advice sent");
   return { message: "Advice sent to the patient." };
 }

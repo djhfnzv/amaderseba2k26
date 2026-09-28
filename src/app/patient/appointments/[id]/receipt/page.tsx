@@ -46,7 +46,7 @@ export default async function ReceiptPage({ params }: PageProps<"/patient/appoin
 
       <article className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-10 print:border-0 print:p-0">
         <header className="flex items-start justify-between gap-4 border-b border-slate-200 pb-6">
-          <Logo />
+          <Logo href="/patient" />
           <div className="text-right">
             <h1 className="text-xl font-bold text-slate-900">Payment receipt</h1>
             <p className="text-sm text-emerald-700">Paid</p>

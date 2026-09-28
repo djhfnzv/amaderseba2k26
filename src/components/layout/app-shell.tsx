@@ -1,3 +1,5 @@
+import { ROLE_HOME } from "@/lib/auth/roles";
+import { getUnreadCount } from "@/lib/notifications/queries";
 import type { AppUser, Role } from "@/types/database";
 import { AppSidebar, type NavItem } from "./app-sidebar";
 
@@ -15,7 +17,7 @@ const ROLE_LABEL: Record<Role, string> = {
  * `@container` lets pages lay out by the space next to the sidebar, not the
  * whole screen width.
  */
-export function AppShell({
+export async function AppShell({
   user,
   nav,
   children,
@@ -24,9 +26,18 @@ export function AppShell({
   nav: NavItem[];
   children: React.ReactNode;
 }) {
+  const unread = await getUnreadCount(user.id);
   return (
     <div className="flex min-h-full flex-1 flex-col bg-slate-50">
-      <AppSidebar nav={nav} userName={user.full_name || user.email || "Account"} roleLabel={ROLE_LABEL[user.role]} />
+      <AppSidebar
+        nav={nav}
+        userId={user.id}
+        unread={unread}
+        homeHref={ROLE_HOME[user.role]}
+        notificationsHref={`${ROLE_HOME[user.role]}/notifications`}
+        userName={user.full_name || user.email || "Account"}
+        roleLabel={ROLE_LABEL[user.role]}
+      />
       <div className="flex min-w-0 flex-1 flex-col lg:pl-64 print:pl-0">
         <main className="@container flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-10 print:p-0">
           <div className="mx-auto w-full max-w-6xl">{children}</div>
