@@ -106,6 +106,7 @@ export async function NotificationsPage({
                 phone={prefs?.sms_phone_verified_at ? prefs.sms_phone : null}
                 enabled={prefs?.sms_enabled ?? true}
                 live={smsIsLive()}
+                suggestedPhone={user.phone}
               />
             </section>
             <p className="px-1 text-xs text-slate-500">

@@ -8,7 +8,10 @@ import { SiteHeader } from "@/components/landing/site-header";
 import { doctorPhotoUrl } from "@/lib/doctor/constants";
 import { getPortfolioBySlug, type Portfolio } from "@/lib/doctor/queries";
 import { env } from "@/lib/env";
+import { shownAverage } from "@/lib/reviews/constants";
+import { getRatingStats, listPublicReviews } from "@/lib/reviews/queries";
 import { getAvailableSlots } from "@/lib/schedule/queries";
+import type { DoctorRatingStats } from "@/types/database";
 import { site } from "@/lib/site";
 
 function describe(p: Portfolio): string {
@@ -48,8 +51,9 @@ export async function generateMetadata({ params }: PageProps<"/doctors/[slug]">)
   };
 }
 
-function jsonLd(p: Portfolio) {
+function jsonLd(p: Portfolio, stats: DoctorRatingStats | null) {
   const { profile } = p;
+  const avg = shownAverage(stats);
   return {
     "@context": "https://schema.org",
     "@type": "Physician",
@@ -66,6 +70,11 @@ function jsonLd(p: Portfolio) {
       addressLocality: c.city,
     })),
     telephone: p.chambers.find((c) => c.phone)?.phone ?? undefined,
+    // Star rating in search results once there are enough reviews.
+    aggregateRating:
+      avg != null && stats
+        ? { "@type": "AggregateRating", ratingValue: avg.toFixed(1), reviewCount: stats.review_count, bestRating: 5, worstRating: 1 }
+        : undefined,
   };
 }
 
@@ -81,14 +90,18 @@ export default async function DoctorPublicPage({ params }: PageProps<"/doctors/[
 
   const isPreview = !portfolio.profile.is_verified;
   // Public visitors get public slots; an unverified doctor previewing their own page uses their session.
-  const slots = await getAvailableSlots(portfolio.profile.user_id, { days: 7, asViewer: isPreview });
+  const [slots, stats, page] = await Promise.all([
+    getAvailableSlots(portfolio.profile.user_id, { days: 7, asViewer: isPreview }),
+    getRatingStats(portfolio.profile.user_id, isPreview),
+    listPublicReviews(portfolio.profile.user_id, { asViewer: isPreview }),
+  ]);
 
   return (
     <>
       {!isPreview && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd(portfolio)).replace(/</g, "\\u003c") }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd(portfolio, stats)).replace(/</g, "\\u003c") }}
         />
       )}
       <SiteHeader />
@@ -104,7 +117,7 @@ export default async function DoctorPublicPage({ params }: PageProps<"/doctors/[
         </div>
       )}
       <main className="flex-1 bg-slate-50">
-        <PortfolioView portfolio={portfolio} slots={slots} bookable={!isPreview} />
+        <PortfolioView portfolio={portfolio} slots={slots} bookable={!isPreview} reviews={{ stats, page }} />
       </main>
       <EmergencyNotice />
       <SiteFooter />

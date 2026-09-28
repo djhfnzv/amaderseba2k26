@@ -4,6 +4,7 @@ export const PAGE_SIZE = 12;
 
 export const SORT_OPTIONS: { value: DoctorSearchSort; label: string }[] = [
   { value: "relevance", label: "Best match" },
+  { value: "rating", label: "Top rated" },
   { value: "soonest", label: "Available soonest" },
   { value: "fee_asc", label: "Fee: low to high" },
   { value: "fee_desc", label: "Fee: high to low" },
@@ -14,6 +15,13 @@ export const AVAILABILITY_OPTIONS = [
   { value: 1, label: "Today" },
   { value: 3, label: "Within 3 days" },
   { value: 7, label: "Within a week" },
+] as const;
+
+/** Ratings only count once a doctor has 3+ reviews. */
+export const RATING_OPTIONS = [
+  { value: 4.5, label: "4.5★ & up" },
+  { value: 4, label: "4★ & up" },
+  { value: 3, label: "3★ & up" },
 ] as const;
 
 export const TYPE_OPTIONS = [
@@ -30,6 +38,7 @@ export type SearchFilters = {
   language: string;
   city: string;
   available: number | null;
+  minRating: number | null;
   sort: DoctorSearchSort;
   page: number;
 };
@@ -62,6 +71,7 @@ export function parseFilters(raw: RawParams): SearchFilters {
     language: first(raw.language).trim().slice(0, 40),
     city: first(raw.city).trim().slice(0, 80),
     available: AVAILABILITY_OPTIONS.some((o) => String(o.value) === first(raw.available)) ? Number(first(raw.available)) : null,
+    minRating: RATING_OPTIONS.some((o) => String(o.value) === first(raw.minRating)) ? Number(first(raw.minRating)) : null,
     sort: SORT_OPTIONS.some((o) => o.value === sort) ? sort : "relevance",
     page: Number.isFinite(page) && page >= 1 && page <= 500 ? page : 1,
   };
@@ -78,6 +88,7 @@ export function searchQuery(filters: Partial<SearchFilters>): string {
   if (filters.language) p.set("language", filters.language);
   if (filters.city) p.set("city", filters.city);
   if (filters.available) p.set("available", String(filters.available));
+  if (filters.minRating) p.set("minRating", String(filters.minRating));
   if (filters.sort && filters.sort !== "relevance") p.set("sort", filters.sort);
   if (filters.page && filters.page > 1) p.set("page", String(filters.page));
   return p.toString();

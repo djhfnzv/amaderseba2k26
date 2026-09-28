@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "create-admin": "tsx --env-file=.env.local scripts/create-admin.ts"
+    "create-admin": "tsx --env-file=.env.local scripts/create-admin.ts",
+    "seed:reviews": "tsx --env-file=.env.local scripts/seed-review-demo.ts",
+    "seed:doctors": "tsx --env-file=.env.local scripts/seed-demo-doctors.ts"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.9.0",

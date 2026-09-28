@@ -27,26 +27,50 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
   if (!parsed.success) {
     return { fieldErrors: fieldErrorsOf(parsed.error), values: publicValues(raw) };
   }
-  const { email, password, fullName, role } = parsed.data;
+  const { email, phone, password, fullName, role } = parsed.data;
+  const admin = createAdminClient();
+
+  // One account per mobile number (users.phone is unique).
+  const { data: phoneOwner } = await admin.from("users").select("id").eq("phone", phone).maybeSingle();
+  if (phoneOwner) {
+    return {
+      fieldErrors: { phone: ["This mobile number is already registered. Log in instead, or use another number."] },
+      values: publicValues(raw),
+    };
+  }
 
   // Create an already-confirmed user so no verification email is needed.
   // `role` is read by the DB trigger, which only accepts patient/doctor.
-  const admin = createAdminClient();
-  const { error: createError } = await admin.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: { full_name: fullName, role },
-  });
+  // The mobile number goes on the auth account (synced to public.users.phone);
+  // it isn't verified here — SMS alerts still ask for a code (M11).
+  const attrs = { email, password, email_confirm: true, user_metadata: { full_name: fullName, role } };
+  let { data: created, error: createError } = await admin.auth.admin.createUser({ ...attrs, phone: `+${phone}` });
 
-  if (createError) {
-    const taken = createError.code === "email_exists" || createError.status === 422;
+  // Some projects refuse phone numbers on auth accounts (phone sign-in off):
+  // create the account without it and store the number on the profile row.
+  let storePhoneOnProfile = false;
+  if (createError && createError.code !== "email_exists" && createError.code !== "phone_exists" && /phone/i.test(createError.message)) {
+    ({ data: created, error: createError } = await admin.auth.admin.createUser(attrs));
+    storePhoneOnProfile = !createError;
+  }
+
+  if (createError || !created.user) {
+    const code = createError?.code;
+    if (code === "phone_exists") {
+      return { fieldErrors: { phone: ["This mobile number is already registered."] }, values: publicValues(raw) };
+    }
+    const taken = code === "email_exists" || (createError?.status === 422 && !/phone/i.test(createError.message));
+    if (!taken) console.error("[signUp]", createError);
     return {
       error: taken
         ? "An account with this email already exists. Log in instead."
         : "Could not create your account. Please try again.",
       values: publicValues(raw),
     };
+  }
+  if (storePhoneOnProfile) {
+    const { error } = await admin.from("users").update({ phone }).eq("id", created.user.id);
+    if (error) console.error("[signUp] phone", error.message);
   }
 
   const supabase = await createClient();

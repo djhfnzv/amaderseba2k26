@@ -25,7 +25,7 @@ export function SignupForm({ defaultRole }: { defaultRole: "patient" | "doctor" 
       action={action}
       onSubmit={(e) => {
         const data = new FormData(e.currentTarget);
-        const filled = ["fullName", "email", "password"].every((k) => String(data.get(k) ?? "").trim());
+        const filled = ["fullName", "email", "phone", "password"].every((k) => String(data.get(k) ?? "").trim());
         if (filled) startLoginSplash("Setting up your account…");
       }}
       className="flex flex-col gap-4"
@@ -71,6 +71,18 @@ export function SignupForm({ defaultRole }: { defaultRole: "patient" | "doctor" 
         placeholder="you@example.com"
         defaultValue={state?.values?.email}
         errors={state?.fieldErrors?.email}
+        required
+      />
+      <Field
+        label="Mobile number"
+        name="phone"
+        type="tel"
+        inputMode="tel"
+        autoComplete="tel"
+        placeholder="01712-345678"
+        hint="Your doctor or patient can reach you on it. Bangladeshi numbers only."
+        defaultValue={state?.values?.phone}
+        errors={state?.fieldErrors?.phone}
         required
       />
       <Field

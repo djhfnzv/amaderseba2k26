@@ -20,6 +20,9 @@ import { JoinCard } from "@/components/consult/join-card";
 import { getPaymentSummary, getPlatformSettings } from "@/lib/payments/queries";
 import { AdviceList, PrescriptionList } from "@/components/prescriptions/rx-lists";
 import { listAdvice, listForAppointment } from "@/lib/prescriptions/queries";
+import { PatientReviewCard } from "@/components/reviews/patient-review-card";
+import { reviewWindows } from "@/lib/reviews/constants";
+import { getMyReview } from "@/lib/reviews/queries";
 
 export const metadata: Metadata = { title: "Appointment · MedLife" };
 
@@ -41,14 +44,16 @@ export default async function PatientAppointmentPage({ params, searchParams }: P
   if (!appt || appt.patient_id !== user.id) notFound();
 
   const canChange = patientCanChange(appt.status, appt.slot_start);
-  const [events, slots, paymentSummary, settings, prescriptions, advice] = await Promise.all([
+  const [events, slots, paymentSummary, settings, prescriptions, advice, review] = await Promise.all([
     listEvents(appt.id),
     canChange ? getAvailableSlots(appt.doctor_id, { days: 14, asViewer: true }) : Promise.resolve([]),
     getPaymentSummary(appt.id),
     getPlatformSettings(),
     listForAppointment(appt.id),
     listAdvice({ appointmentId: appt.id }),
+    appt.status === "completed" ? getMyReview(appt.id) : Promise.resolve(null),
   ]);
+  const windows = reviewWindows(appt.slot_end, review);
   const paymentNote = PAYMENT_NOTES[typeof paymentParam === "string" ? paymentParam : ""];
   const sameTypeSlots = slots.filter((s) => s.consultation_type === appt.consultation_type);
   const zone = appt.doctor?.timezone;
@@ -104,6 +109,20 @@ export default async function PatientAppointmentPage({ params, searchParams }: P
               {appt.status === "cancelled" && appt.cancel_reason && <Row label="Cancellation reason">{appt.cancel_reason}</Row>}
             </dl>
           </section>
+
+          {appt.status === "completed" && (
+            <section id="review" className="scroll-mt-24 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+              <h2 className="mb-4 text-lg font-semibold text-slate-900">{review ? "Your review" : "Rate your visit"}</h2>
+              <PatientReviewCard
+                appointmentId={appt.id}
+                doctorName={appt.doctor?.display_name ?? "your doctor"}
+                consultationType={appt.consultation_type}
+                review={review}
+                canWrite={windows.canWrite}
+                canEdit={windows.canEdit}
+              />
+            </section>
+          )}
 
           {(prescriptions.length > 0 || advice.length > 0 || appt.status === "completed") && (
             <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">

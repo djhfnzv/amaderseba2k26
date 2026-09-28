@@ -184,7 +184,7 @@ type VerificationEventRow = {
   created_at: string;
 };
 
-export type DoctorSearchSort = "relevance" | "soonest" | "fee_asc" | "fee_desc" | "experience";
+export type DoctorSearchSort = "relevance" | "soonest" | "fee_asc" | "fee_desc" | "experience" | "rating";
 
 export type DoctorSearchRow = {
   user_id: string;
@@ -202,6 +202,9 @@ export type DoctorSearchRow = {
   degrees: string[];
   cities: string[];
   next_available: string | null;
+  /** Only set once the doctor has 3+ published reviews. */
+  rating_avg: number | null;
+  review_count: number;
   total_count: number;
 };
 
@@ -567,6 +570,85 @@ type SmsOutboxRow = {
   created_at: string;
 };
 
+export const REVIEW_TAGS = ["Explains clearly", "Good listener", "On time", "Friendly", "Thorough", "Helpful advice"] as const;
+export type ReviewTag = (typeof REVIEW_TAGS)[number];
+export type ReviewStatus = "published" | "hidden";
+
+type ReviewRow = {
+  id: string;
+  appointment_id: string;
+  doctor_id: string;
+  patient_id: string;
+  rating: number;
+  tags: ReviewTag[];
+  body: string | null;
+  is_anonymous: boolean;
+  author_label: string | null;
+  status: ReviewStatus;
+  hidden_reason: string | null;
+  hidden_at: string | null;
+  flagged: boolean;
+  flag_reason: string | null;
+  reply_body: string | null;
+  replied_at: string | null;
+  edited_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type ReviewReportRow = {
+  id: string;
+  review_id: string;
+  reporter_id: string;
+  reason: string;
+  resolved_at: string | null;
+  created_at: string;
+};
+
+type ReviewModerationLogRow = {
+  id: string;
+  review_id: string;
+  actor_id: string | null;
+  action: "hidden" | "restored" | "dismissed" | "reported" | "flagged";
+  reason: string | null;
+  created_at: string;
+};
+
+type DoctorRatingStatsRow = {
+  doctor_id: string;
+  review_count: number;
+  rating_avg: number | null;
+  count_1: number;
+  count_2: number;
+  count_3: number;
+  count_4: number;
+  count_5: number;
+  updated_at: string;
+};
+
+/** A review as shown publicly / to the doctor (never includes the patient id). */
+export type PublicReview = {
+  id: string;
+  rating: number;
+  tags: ReviewTag[];
+  body: string | null;
+  author: string | null;
+  reply_body: string | null;
+  replied_at: string | null;
+  created_at: string;
+  edited_at: string | null;
+  consultation_type: ConsultationType;
+};
+
+export type DoctorReview = Omit<PublicReview, "consultation_type"> & {
+  status: ReviewStatus;
+  hidden_reason: string | null;
+  visit_date: string;
+  consultation_type: ConsultationType;
+  reported: boolean;
+};
+
+
 export type Database = {
   public: {
     Tables: {
@@ -585,6 +667,8 @@ export type Database = {
           role?: Role;
           status?: AccountStatus;
           suspended_reason?: string | null;
+          /** Server (service role) only — users cannot change it themselves. */
+          phone?: string | null;
         };
         Relationships: [];
       };
@@ -734,7 +818,12 @@ export type Database = {
         Update: Partial<Pick<SmsOutboxRow, "status" | "provider" | "provider_ref" | "error" | "not_before" | "sent_at" | "attempts">>;
         Relationships: [];
       };
+      reviews: { Row: ReviewRow; Insert: never; Update: never; Relationships: [] };
+      review_reports: { Row: ReviewReportRow; Insert: never; Update: never; Relationships: [] };
+      review_moderation_log: { Row: ReviewModerationLogRow; Insert: never; Update: never; Relationships: [] };
+      doctor_rating_stats: { Row: DoctorRatingStatsRow; Insert: never; Update: never; Relationships: [] };
       verification_events: {
+
         Row: VerificationEventRow;
         Insert: never;
         Update: never;
@@ -803,7 +892,25 @@ export type Database = {
       claim_sms: { Args: { p_limit?: number }; Returns: SmsOutboxRow[] };
       queue_appointment_reminders: { Args: Record<string, never>; Returns: number };
       run_notification_jobs: { Args: Record<string, never>; Returns: undefined };
+      save_review: {
+        Args: { p_appointment: string; p_rating: number; p_tags?: string[]; p_body?: string | null; p_anonymous?: boolean };
+        Returns: string;
+      };
+      delete_review: { Args: { p_review: string }; Returns: undefined };
+      my_doctor_reviews: {
+        Args: { p_filter?: "all" | "unreplied"; p_limit?: number; p_offset?: number };
+        Returns: DoctorReview[];
+      };
+      reply_to_review: { Args: { p_review: string; p_body: string | null }; Returns: undefined };
+      report_review: { Args: { p_review: string; p_reason: string }; Returns: undefined };
+      moderate_review: { Args: { p_review: string; p_action: "hide" | "restore" | "dismiss"; p_reason?: string | null }; Returns: undefined };
+      doctor_public_reviews: {
+        Args: { p_doctor: string; p_sort?: "newest" | "highest" | "lowest"; p_limit?: number; p_offset?: number };
+        Returns: (PublicReview & { total_count: number })[];
+      };
+      queue_review_requests: { Args: Record<string, never>; Returns: number };
       get_available_slots: {
+
         Args: { p_doctor: string; p_from?: string | null; p_days?: number; p_type?: ConsultationType | null };
         Returns: AvailableSlot[];
       };
@@ -820,6 +927,7 @@ export type Database = {
           p_limit?: number;
           p_offset?: number;
           p_available_days?: number | null;
+          p_min_rating?: number | null;
         };
         Returns: DoctorSearchRow[];
       };
@@ -875,3 +983,7 @@ export type DoctorAdvice = DoctorAdviceRow;
 export type AppNotification = NotificationRow;
 export type NotificationPreferences = NotificationPreferencesRow;
 export type SmsOutbox = SmsOutboxRow;
+export type Review = ReviewRow;
+export type ReviewReport = ReviewReportRow;
+export type ReviewModerationLog = ReviewModerationLogRow;
+export type DoctorRatingStats = DoctorRatingStatsRow;

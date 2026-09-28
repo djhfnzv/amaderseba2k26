@@ -6,6 +6,9 @@ import { requireRole } from "@/lib/auth/guards";
 import { doctorPhotoUrl } from "@/lib/doctor/constants";
 import { getOwnRequest } from "@/lib/verification/queries";
 import { countTodayQueue } from "@/lib/appointments/queries";
+import { StarRating } from "@/components/reviews/stars";
+import { shownAverage } from "@/lib/reviews/constants";
+import { getRatingStats } from "@/lib/reviews/queries";
 import {
   getOrCreateOwnProfile,
   getPortfolioDetails,
@@ -17,11 +20,13 @@ export const metadata: Metadata = { title: "Doctor dashboard · MedLife" };
 export default async function DoctorDashboard() {
   const user = await requireRole("doctor", "/doctor");
   const profile = await getOrCreateOwnProfile(user);
-  const [details, request, todayCount] = await Promise.all([
+  const [details, request, todayCount, ratings] = await Promise.all([
     getPortfolioDetails(user.id),
     getOwnRequest(user.id),
     countTodayQueue(user.id, profile.timezone),
+    getRatingStats(user.id, true),
   ]);
+  const avg = shownAverage(ratings);
   const checklist = portfolioChecklist({ profile, ...details });
   const done = checklist.filter((c) => c.done).length;
   const percent = Math.round((done / checklist.length) * 100);
@@ -92,7 +97,7 @@ export default async function DoctorDashboard() {
         </ul>
       </section>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 @4xl:grid-cols-3">
         <Link
           href="/doctor/appointments?view=today"
           className={`rounded-2xl border p-5 transition-[box-shadow,translate] duration-200 hover:-translate-y-0.5 hover:shadow-md ${todayCount ? "border-teal-300 bg-teal-50" : "border-slate-200 bg-white"}`}
@@ -105,6 +110,17 @@ export default async function DoctorDashboard() {
           <p className="text-sm font-medium text-slate-600">Schedule</p>
           <p className="mt-1 text-lg font-semibold text-slate-900">Weekly hours & leave</p>
           <p className="mt-2 text-sm font-semibold text-teal-700">Manage →</p>
+        </Link>
+        <Link href="/doctor/reviews" className="rounded-2xl border border-slate-200 bg-white p-5 transition-[box-shadow,translate] duration-200 hover:-translate-y-0.5 hover:shadow-md">
+          <p className="text-sm font-medium text-slate-600">Patient rating</p>
+          {avg != null ? (
+            <p className="mt-1 flex items-center gap-2 text-3xl font-bold text-slate-900">
+              {avg.toFixed(1)} <StarRating value={avg} size="md" />
+            </p>
+          ) : (
+            <p className="mt-1 text-lg font-semibold text-slate-900">{ratings?.review_count ? `${ratings.review_count} review${ratings.review_count === 1 ? "" : "s"}` : "No reviews yet"}</p>
+          )}
+          <p className="mt-2 text-sm font-semibold text-teal-700">See reviews →</p>
         </Link>
       </div>
     </div>

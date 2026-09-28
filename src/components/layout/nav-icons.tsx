@@ -17,6 +17,7 @@ export type NavIcon =
   | "rx"
   | "pill"
   | "message"
+  | "star"
   | "external";
 
 const paths: Record<NavIcon, React.ReactNode> = {
@@ -98,6 +99,7 @@ const paths: Record<NavIcon, React.ReactNode> = {
     </>
   ),
   message: <path d="M4.5 5.5h15a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H10l-4.5 3.5v-3.5h-1a1 1 0 0 1-1-1v-10a1 1 0 0 1 1-1ZM8 10h8M8 13.5h5" />,
+  star: <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z" />,
   external: <path d="M14 4h6v6M20 4l-8.5 8.5M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />,
 };
 

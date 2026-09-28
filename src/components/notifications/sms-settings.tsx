@@ -11,11 +11,14 @@ export function SmsSettings({
   phone,
   enabled,
   live,
+  suggestedPhone,
 }: {
   phone: string | null;
   enabled: boolean;
   /** False while SMS runs in test (log-only) mode. */
   live: boolean;
+  /** Number given at sign-up, offered as the default. */
+  suggestedPhone?: string | null;
 }) {
   const [changing, setChanging] = useState(false);
 
@@ -55,16 +58,16 @@ export function SmsSettings({
           </form>
         </div>
       ) : (
-        <PhoneForm onCancel={phone ? () => setChanging(false) : undefined} />
+        <PhoneForm onCancel={phone ? () => setChanging(false) : undefined} suggested={suggestedPhone ?? null} />
       )}
     </div>
   );
 }
 
-function PhoneForm({ onCancel }: { onCancel?: () => void }) {
+function PhoneForm({ onCancel, suggested }: { onCancel?: () => void; suggested: string | null }) {
   const [sendState, sendAction] = useActionState(requestPhoneCode, undefined);
   const [verifyState, verifyAction] = useActionState(verifyPhoneCode, undefined);
-  const phone = sendState?.values?.phone ?? "";
+  const phone = sendState?.values?.phone ?? (suggested ? formatBdPhone(suggested) : "");
   const onCodeStep = sendState?.values?.step === "code" && !verifyState?.message;
 
   if (verifyState?.message) return <Alert kind="success">{verifyState.message}</Alert>;
