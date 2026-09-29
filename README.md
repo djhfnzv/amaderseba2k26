@@ -52,7 +52,8 @@ Demo bios say they are demo profiles. Both scripts refuse to run in production.
 | `feature/m9-video-consultation` | M9 Video consultation (free WebRTC) | ✅ merged |
 | `feature/m10-prescriptions` | M10 E-prescription + advice notes | ✅ merged |
 | `feature/m11-notifications` | M11 Notifications (in-app + SMS) | ✅ merged |
-| `feature/m12-reviews` | M12 Reviews & ratings | ✅ |
+| `feature/m12-reviews` | M12 Reviews & ratings | ✅ merged |
+| `feature/m14-audit` | M14 Audit & security logs | ✅ |
 
 ## M1 — Authentication & roles
 
@@ -303,6 +304,31 @@ Demo bios say they are demo profiles. Both scripts refuse to run in production.
   admins ← flagged or reported review.
 - All writes go through DB functions (`save_review`, `delete_review`, `reply_to_review`,
   `report_review`, `moderate_review`); `doctor_rating_stats` is kept up to date by a trigger.
+
+## M14 — Audit & security
+
+- **`audit_logs`** (FR-A-08, NFR-03): who (user, role), what, which record, whose medical data, when,
+  IP and browser, success/failure and details. **Append-only** — no one can edit or delete entries,
+  admins included; a nightly job removes entries older than **2 years**.
+- **Logged automatically by the database** (triggers): health profile changes; report upload, edit,
+  delete; consultation notes (once per 10 min) and shared files; advice; prescription create, edit
+  (once per 10 min), sign, amend, replace, delete draft; verification documents and decisions;
+  sign-ups, suspensions, role changes; settings, payouts, refunds, review moderation, medicine list.
+- **Logged by the app** (reads): a doctor or admin opening a patient's health profile (appointment or
+  consultation room), reports, consultation files, prescriptions and PDFs, verification documents;
+  logins, failed/blocked logins, logouts, password reset requests and changes; audit exports.
+  Patients opening their own data isn't logged.
+- The app forwards the visitor's IP and browser (`x-medlife-ip` / `x-medlife-ua`) so trigger
+  entries have them too.
+- **Admin** `/admin/audit`: search (name, email, IP), filters (category, action, date range, failed
+  only), per-user activity and "who accessed this patient's data" (linked from each user's page),
+  details per entry, **CSV export** (10,000 rows, logged).
+- **Patient** `/patient/access-history` (linked from Medical records): which doctor or MedLife staff
+  opened their records and when — names only, no IPs.
+- **Live, no page reloads:** both pages load filters and pages as JSON (`/api/admin/audit`,
+  `/api/patient/access-history`) and poll for new entries (admin every 8 s on page 1, patient every
+  15 s; paused while the tab is hidden). New rows slide in with a short highlight; motion is off for
+  users who prefer reduced motion.
 
 ## Project layout
 

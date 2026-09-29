@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { audit } from "@/lib/audit/log";
 import { getCurrentUser } from "@/lib/auth/guards";
 import { renderPrescriptionPdf } from "@/lib/prescriptions/pdf";
 import { getPrescription } from "@/lib/prescriptions/queries";
@@ -18,6 +19,16 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/prescription
 
   const rx = await getPrescription(id);
   if (!rx) return new NextResponse("Not found", { status: 404 });
+
+  await audit({
+    category: "prescription",
+    action: request.nextUrl.searchParams.get("download") === "1" ? "prescription.download" : "prescription.pdf",
+    targetType: "prescription",
+    targetId: rx.id,
+    patientId: rx.patient_id,
+    metadata: { code: rx.verify_code, status: rx.status },
+    skipSelf: true,
+  });
 
   const supabase = await createClient();
   const { data: doc } = await supabase.from("doctor_profiles").select("timezone").eq("user_id", rx.doctor_id).maybeSingle();

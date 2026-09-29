@@ -649,6 +649,34 @@ export type DoctorReview = Omit<PublicReview, "consultation_type"> & {
 };
 
 
+export type AuditCategory = "medical" | "prescription" | "verification" | "security" | "admin";
+
+type AuditLogRow = {
+  id: number;
+  occurred_at: string;
+  actor_id: string | null;
+  actor_role: string | null;
+  actor_label: string | null;
+  category: AuditCategory;
+  action: string;
+  target_type: string | null;
+  target_id: string | null;
+  patient_id: string | null;
+  success: boolean;
+  ip: string | null;
+  user_agent: string | null;
+  metadata: Json;
+};
+
+export type RecordAccessRow = {
+  occurred_at: string;
+  action: string;
+  category: AuditCategory;
+  actor_label: string;
+  actor_role: string | null;
+  total_count: number;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -822,6 +850,12 @@ export type Database = {
       review_reports: { Row: ReviewReportRow; Insert: never; Update: never; Relationships: [] };
       review_moderation_log: { Row: ReviewModerationLogRow; Insert: never; Update: never; Relationships: [] };
       doctor_rating_stats: { Row: DoctorRatingStatsRow; Insert: never; Update: never; Relationships: [] };
+      audit_logs: {
+        Row: AuditLogRow;
+        Insert: Omit<AuditLogRow, "id" | "occurred_at">;
+        Update: never;
+        Relationships: [];
+      };
       verification_events: {
 
         Row: VerificationEventRow;
@@ -909,6 +943,7 @@ export type Database = {
         Returns: (PublicReview & { total_count: number })[];
       };
       queue_review_requests: { Args: Record<string, never>; Returns: number };
+      my_record_access: { Args: { p_limit?: number; p_offset?: number }; Returns: RecordAccessRow[] };
       get_available_slots: {
 
         Args: { p_doctor: string; p_from?: string | null; p_days?: number; p_type?: ConsultationType | null };
@@ -987,3 +1022,4 @@ export type Review = ReviewRow;
 export type ReviewReport = ReviewReportRow;
 export type ReviewModerationLog = ReviewModerationLogRow;
 export type DoctorRatingStats = DoctorRatingStatsRow;
+export type AuditLog = AuditLogRow;

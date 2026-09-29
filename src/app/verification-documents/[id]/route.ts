@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { audit } from "@/lib/audit/log";
 import { getCurrentUser } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { VERIFICATION_BUCKET } from "@/lib/verification/constants";
@@ -21,12 +22,21 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/verification
   const supabase = await createClient();
   const { data: doc } = await supabase
     .from("verification_documents")
-    .select("storage_path, file_name")
+    .select("storage_path, file_name, doctor_id, doc_type")
     .eq("id", id)
     .maybeSingle();
   if (!doc) return new NextResponse("Not found", { status: 404 });
 
   const download = request.nextUrl.searchParams.get("download") === "1";
+  if (doc.doctor_id !== user.id) {
+    await audit({
+      category: "verification",
+      action: download ? "verification_doc.download" : "verification_doc.view",
+      targetType: "verification_document",
+      targetId: id,
+      metadata: { doctor: doc.doctor_id, type: doc.doc_type },
+    });
+  }
   const { data, error } = await supabase.storage
     .from(VERIFICATION_BUCKET)
     .createSignedUrl(doc.storage_path, SIGNED_URL_TTL_SECONDS, {

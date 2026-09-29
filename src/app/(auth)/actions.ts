@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { audit } from "@/lib/audit/log";
 import { env } from "@/lib/env";
 import { ROLE_HOME, isRole, safeNext } from "@/lib/auth/roles";
 import {
@@ -98,6 +99,15 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
+    await audit({
+      category: "security",
+      action: error.code === "user_banned" ? "login.blocked" : "login.failed",
+      targetType: "email",
+      targetId: email.toLowerCase(),
+      metadata: { reason: error.code ?? "error" },
+      success: false,
+      actor: null,
+    });
     return {
       error:
         error.code === "invalid_credentials"
@@ -121,10 +131,26 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
   }
 
   if (profile.status === "suspended") {
+    await audit({
+      category: "security",
+      action: "login.blocked",
+      targetType: "user",
+      targetId: data.user.id,
+      metadata: { reason: "suspended" },
+      success: false,
+      actor: { id: data.user.id, role: profile.role, label: email },
+    });
     await supabase.auth.signOut();
     return { error: "Your account has been suspended. Please contact support." };
   }
 
+  await audit({
+    category: "security",
+    action: "login.success",
+    targetType: "user",
+    targetId: data.user.id,
+    actor: { id: data.user.id, role: profile.role, label: email },
+  });
   redirect(safeNext(next, ROLE_HOME[profile.role]));
 }
 
@@ -139,6 +165,13 @@ export async function forgotPassword(_prev: FormState, formData: FormData): Prom
   }
 
   const supabase = await createClient();
+  await audit({
+    category: "security",
+    action: "password.reset_request",
+    targetType: "email",
+    targetId: parsed.data.email.toLowerCase(),
+    actor: null,
+  });
   await supabase.auth.resetPasswordForEmail(parsed.data.email, {
     redirectTo: `${env.siteUrl}/auth/confirm?next=/reset-password`,
   });
@@ -171,6 +204,13 @@ export async function resetPassword(_prev: FormState, formData: FormData): Promi
     };
   }
 
+  await audit({
+    category: "security",
+    action: "password.change",
+    targetType: "user",
+    targetId: user.id,
+    actor: { id: user.id, role: null, label: user.email ?? null },
+  });
   redirect("/dashboard");
 }
 
@@ -178,6 +218,7 @@ export async function resetPassword(_prev: FormState, formData: FormData): Promi
 // Log out
 // -----------------------------------------------------------------------------
 export async function signOut() {
+  await audit({ category: "security", action: "logout", targetType: "user" });
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/login");

@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { audit } from "@/lib/audit/log";
 import { getCurrentUser } from "@/lib/auth/guards";
 import { MEDICAL_FILES_BUCKET } from "@/lib/patient/constants";
 import { createClient } from "@/lib/supabase/server";
@@ -22,12 +23,21 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/medical-file
   const supabase = await createClient();
   const { data: file } = await supabase
     .from("medical_files")
-    .select("storage_path, file_name")
+    .select("storage_path, file_name, patient_id, title")
     .eq("id", id)
     .maybeSingle();
   if (!file) return new NextResponse("Not found", { status: 404 });
 
   const download = request.nextUrl.searchParams.get("download") === "1";
+  await audit({
+    category: "medical",
+    action: download ? "medical_file.download" : "medical_file.view",
+    targetType: "medical_file",
+    targetId: id,
+    patientId: file.patient_id,
+    metadata: { title: file.title },
+    skipSelf: true,
+  });
   const { data, error } = await supabase.storage
     .from(MEDICAL_FILES_BUCKET)
     .createSignedUrl(file.storage_path, SIGNED_URL_TTL_SECONDS, { download: download ? file.file_name : false });

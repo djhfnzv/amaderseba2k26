@@ -91,7 +91,45 @@ body {
   --animate-logo-sink: logo-sink 620ms cubic-bezier(0.55, 0, 0.75, 0.2) both;
   --animate-splash-out-late: splash-out 380ms ease-in 320ms both;
   --animate-icon-in: fade-in 260ms ease-out 620ms both;
+  /* Live lists (audit log, access history): new rows slide in and glow */
+  --animate-row-in: row-in 420ms var(--ease-soft) both;
+  --animate-row-glow: row-glow 2.6s ease-out both;
+  --animate-live-dot: live-dot 1.8s ease-out infinite;
+  --animate-loading-bar: loading-bar 1s ease-in-out infinite;
 
+  @keyframes row-in {
+    from {
+      opacity: 0;
+      translate: 0 -8px;
+      scale: 0.99;
+    }
+  }
+  @keyframes row-glow {
+    from {
+      background-color: var(--color-teal-50);
+      box-shadow: inset 3px 0 0 var(--color-teal-600);
+    }
+    to {
+      background-color: transparent;
+      box-shadow: inset 3px 0 0 transparent;
+    }
+  }
+  @keyframes loading-bar {
+    from {
+      translate: -100% 0;
+    }
+    to {
+      translate: 300% 0;
+    }
+  }
+  @keyframes live-dot {
+    0% {
+      box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-emerald-500) 60%, transparent);
+    }
+    100% {
+      box-shadow: 0 0 0 8px transparent;
+    }
+  }
   @keyframes fade-in {
     from {
       opacity: 0;

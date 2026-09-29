@@ -24,6 +24,9 @@ export default async function MedicalRecordsPage({ searchParams }: PageProps<"/p
           <p className="mt-1 text-slate-600">
             Upload past reports so your doctors have the full picture. Files are stored privately.
           </p>
+          <Link href="/patient/access-history" className="mt-1 inline-block text-sm font-medium text-teal-700 hover:underline">
+            See who opened your records →
+          </Link>
         </div>
         {isWelcome && (
           <Link

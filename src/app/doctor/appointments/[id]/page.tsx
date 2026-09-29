@@ -13,6 +13,7 @@ import { LocalTime } from "@/components/ui/local-time";
 import { rescheduleAppointment } from "@/lib/appointments/actions";
 import { isLive, paymentLabel } from "@/lib/appointments/constants";
 import { getDoctorAppointment } from "@/lib/appointments/queries";
+import { audit } from "@/lib/audit/log";
 import { requireRole } from "@/lib/auth/guards";
 import { formatFee } from "@/lib/doctor/constants";
 import { getOrCreateOwnProfile, getPortfolioDetails } from "@/lib/doctor/queries";
@@ -29,6 +30,14 @@ export default async function DoctorAppointmentPage({ params }: PageProps<"/doct
   const { id } = await params;
   const appt = /^[0-9a-f-]{36}$/i.test(id) ? await getDoctorAppointment(id) : null;
   if (!appt || appt.doctor_id !== user.id) notFound();
+  await audit({
+    category: "medical",
+    action: "health_profile.view",
+    targetType: "appointment",
+    targetId: appt.id,
+    patientId: appt.patient_id,
+    metadata: { via: "appointment", reports: appt.files.length },
+  });
 
   const profile = await getOrCreateOwnProfile(user);
   const live = isLive(appt.status);
