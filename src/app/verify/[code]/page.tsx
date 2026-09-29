@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/landing/site-footer";
 import { SiteHeader } from "@/components/landing/site-header";
 import { LocalTime } from "@/components/ui/local-time";
 import { site } from "@/lib/site";
+import { rateLimit, requestIp } from "@/lib/security/rate-limit";
 import { createPublicClient } from "@/lib/supabase/public";
 import type { VerifyResult } from "@/types/database";
 
@@ -12,8 +13,11 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-async function verify(code: string): Promise<VerifyResult> {
+async function verify(code: string): Promise<VerifyResult | { status: "limited"; retryAfter: string }> {
   if (!/^[A-Z0-9]{10}$/.test(code)) return { status: "invalid" };
+  // Stops anyone guessing IDs by brute force.
+  const limit = await rateLimit("verify_lookup_ip", await requestIp());
+  if (!limit.ok) return { status: "limited", retryAfter: limit.retryAfter };
   const { data, error } = await createPublicClient().rpc("verify_prescription", { p_code: code });
   if (error || !data) {
     if (error) console.error("[verify]", error.message);
@@ -50,6 +54,19 @@ export default async function VerifyCodePage({ params }: PageProps<"/verify/[cod
   const { code: raw } = await params;
   const code = decodeURIComponent(raw).toUpperCase();
   const result = await verify(code);
+  if (result.status === "limited") {
+    return (
+      <>
+        <SiteHeader />
+        <main className="page-container flex flex-1 flex-col items-center py-16">
+          <p role="status" className="w-full max-w-lg rounded-2xl border border-amber-200 bg-amber-50 p-6 text-amber-900">
+            Too many checks from this network. Please try again in {result.retryAfter}.
+          </p>
+        </main>
+        <SiteFooter />
+      </>
+    );
+  }
   const state = STATES[result.status];
 
   return (

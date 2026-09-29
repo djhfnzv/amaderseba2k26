@@ -219,3 +219,10 @@ export async function listAdvice(filter: { patientId?: string; appointmentId?: s
   const names = new Map((doctors ?? []).map((d) => [d.user_id, d.display_name]));
   return rows.map((r) => ({ ...r, doctor_name: names.get(r.doctor_id) ?? null }));
 }
+
+/** Active lab tests for the editor's quick picks (M13, admin-managed). */
+export async function listQuickTests(): Promise<string[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("lab_tests").select("name").eq("is_active", true).order("sort_order").order("name");
+  return (data ?? []).map((t) => t.name);
+}

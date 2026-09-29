@@ -7,6 +7,7 @@ import { HowItWorks } from "@/components/landing/how-it-works";
 import { EmergencyNotice, SiteFooter } from "@/components/landing/site-footer";
 import { SiteHeader } from "@/components/landing/site-header";
 import { Specialties } from "@/components/landing/specialties";
+import { Reveal } from "@/components/motion/reveal";
 
 export default function Home() {
   return (
@@ -20,11 +21,21 @@ export default function Home() {
         <SiteHeader />
         <main className="flex-1">
           <Hero />
-          <Features />
-          <HowItWorks />
-          <Specialties />
-          <ForDoctors />
-          <Faq />
+          <Reveal>
+            <Features />
+          </Reveal>
+          <Reveal>
+            <HowItWorks />
+          </Reveal>
+          <Reveal>
+            <Specialties />
+          </Reveal>
+          <Reveal>
+            <ForDoctors />
+          </Reveal>
+          <Reveal>
+            <Faq />
+          </Reveal>
         </main>
         <EmergencyNotice />
         <SiteFooter />

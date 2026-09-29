@@ -17,6 +17,13 @@ export default async function AdminDashboard() {
       cta: s.pendingVerifications > 0 ? "Review now →" : "Open queue →",
       highlight: s.pendingVerifications > 0,
     },
+    {
+      label: "Complaints needing action",
+      value: s.openComplaints,
+      href: "/admin/complaints",
+      cta: s.openComplaints > 0 ? "Handle now →" : "Open queue →",
+      highlight: s.openComplaints > 0,
+    },
     { label: "Appointments today", value: s.appointmentsToday, sub: `${s.appointmentsUpcoming} upcoming after today` },
     { label: "Patients", value: s.patients, href: "/admin/users?role=patient", cta: "View patients →" },
     {
@@ -41,7 +48,7 @@ export default async function AdminDashboard() {
         <p className="mt-1 text-slate-600">Operate and moderate the MedLife platform.</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 @3xl:grid-cols-3 @5xl:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 @3xl:grid-cols-3 @5xl:grid-cols-3">
         {cards.map((c) => {
           const body = (
             <>
@@ -64,11 +71,21 @@ export default async function AdminDashboard() {
         })}
       </div>
 
-      <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-5 sm:p-6">
-        <h2 className="text-sm font-semibold text-slate-900">Coming later</h2>
-        <p className="mt-1 text-sm text-slate-600">
-          Payments & refunds, complaints, review moderation, specialties & medicines, analytics and audit logs.
-        </p>
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {[
+          { href: "/admin/analytics", title: "Analytics", text: "Bookings, revenue, cancellations, top doctors" },
+          { href: "/admin/audit", title: "Audit log", text: "Who viewed or changed medical data" },
+          { href: "/admin/catalog", title: "Specialties & tests", text: "What doctors can list and prescribe" },
+        ].map((l) => (
+          <Link
+            key={l.href}
+            href={l.href}
+            className="rounded-2xl border border-slate-200 bg-white p-4 transition-[box-shadow,translate] duration-200 hover:-translate-y-0.5 hover:shadow-md"
+          >
+            <p className="font-semibold text-slate-900">{l.title} →</p>
+            <p className="mt-0.5 text-sm text-slate-600">{l.text}</p>
+          </Link>
+        ))}
       </section>
     </div>
   );

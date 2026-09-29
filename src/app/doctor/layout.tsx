@@ -17,6 +17,7 @@ export default async function DoctorLayout({ children }: LayoutProps<"/doctor">)
         { href: "/doctor/portfolio", label: "Portfolio", icon: "id" },
         { href: "/doctor/earnings", label: "Earnings", icon: "wallet" },
         { href: "/doctor/verification", label: "Verification", icon: "shield" },
+        { href: "/doctor/complaints", label: "Help & complaints", icon: "support" },
         { href: `/doctors/${profile.slug}`, label: "My public page", icon: "search", external: true },
       ]}
     >

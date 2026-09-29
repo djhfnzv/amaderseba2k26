@@ -13,6 +13,7 @@ export default async function PatientLayout({ children }: LayoutProps<"/patient"
         { href: "/patient/profile", label: "Health profile", icon: "heart" },
         { href: "/patient/records", label: "Medical records", icon: "file" },
         { href: "/patient/doctors", label: "Find a doctor", icon: "search" },
+        { href: "/patient/complaints", label: "Help & complaints", icon: "support" },
       ]}
     >
       {children}

@@ -2,10 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { audit } from "@/lib/audit/log";
 import { requireRole } from "@/lib/auth/guards";
 import { flash } from "@/lib/flash";
 import { kickSmsDispatch } from "@/lib/notifications/dispatch";
 import { processPendingRefunds } from "@/lib/payments/service";
+import { clearLoginFailures } from "@/lib/security/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { formToObject, type FormState } from "@/lib/validation/form-state";
@@ -73,4 +75,16 @@ export async function setUserStatus(_prev: FormState, formData: FormData): Promi
         ? `Account suspended. ${cancelled} upcoming appointment${cancelled === 1 ? " was" : "s were"} cancelled.`
         : "Account suspended.",
   };
+}
+
+/** Lifts a login lock-out (too many wrong passwords) before it expires. */
+export async function unlockLogin(formData: FormData): Promise<void> {
+  await requireRole("admin");
+  const userId = String(formData.get("userId") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(userId)) return;
+  const { data: target } = await createAdminClient().from("users").select("email").eq("id", userId).maybeSingle();
+  if (!target?.email) return;
+  await clearLoginFailures(target.email);
+  await audit({ category: "security", action: "account.unlock", targetType: "user", targetId: userId });
+  revalidatePath(`/admin/users/${userId}`);
 }

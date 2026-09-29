@@ -2,6 +2,7 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { safeNext } from "@/lib/auth/roles";
+import { markSessionActive } from "@/lib/auth/session-server";
 
 /**
  * Landing point for links in Supabase emails (e.g. password reset).
@@ -32,6 +33,7 @@ export async function GET(request: NextRequest) {
   const url = request.nextUrl.clone();
   url.search = "";
   if (ok) {
+    await markSessionActive();
     url.pathname = next;
   } else {
     url.pathname = "/login";

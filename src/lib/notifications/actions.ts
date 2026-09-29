@@ -1,5 +1,6 @@
 "use server";
 
+import { rateLimit, requestIp } from "@/lib/security/rate-limit";
 import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { requireRole, requireUser } from "@/lib/auth/guards";
@@ -69,6 +70,11 @@ export async function requestPhoneCode(_prev: FormState, formData: FormData): Pr
   const phone = normalizeBdPhone(raw);
   if (!phone) {
     return { error: "Enter a Bangladeshi mobile number, e.g. 01712-345678.", fieldErrors: { phone: ["Invalid number"] }, values: { phone: raw } };
+  }
+
+  const [byPhone, byIp] = await Promise.all([rateLimit("sms_code_phone", phone, { hash: true }), rateLimit("sms_code_ip", await requestIp())]);
+  if (!byPhone.ok || !byIp.ok) {
+    return { error: `Too many codes requested. Please try again in ${!byPhone.ok ? byPhone.retryAfter : byIp.ok ? "" : byIp.retryAfter}.`, values: { phone: raw } };
   }
 
   const admin = createAdminClient();

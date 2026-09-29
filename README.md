@@ -53,7 +53,8 @@ Demo bios say they are demo profiles. Both scripts refuse to run in production.
 | `feature/m10-prescriptions` | M10 E-prescription + advice notes | ✅ merged |
 | `feature/m11-notifications` | M11 Notifications (in-app + SMS) | ✅ merged |
 | `feature/m12-reviews` | M12 Reviews & ratings | ✅ merged |
-| `feature/m14-audit` | M14 Audit & security logs | ✅ |
+| `feature/m14-audit` | M14 Audit & security logs | ✅ merged |
+| `feature/m13-admin-panel` | M13 Complaints, analytics, specialties & tests | ✅ |
 
 ## M1 — Authentication & roles
 
@@ -329,6 +330,55 @@ Demo bios say they are demo profiles. Both scripts refuse to run in production.
   `/api/patient/access-history`) and poll for new entries (admin every 8 s on page 1, patient every
   15 s; paused while the tab is hidden). New rows slide in with a short highlight; motion is off for
   users who prefer reduced motion.
+
+## Sessions: 15-minute idle timeout & connection loss
+
+- **Cookies live 15 minutes.** Supabase auth cookies and the httpOnly `ml_seen` activity stamp get a
+  15-minute `maxAge`; every real action (navigation, form, click/typing — throttled keep-alive) slides
+  it forward. Prefetches and live polling (bell, audit log, access history, heartbeat) are sent as
+  background requests (`x-ml-background: 1`) and don't extend it.
+- **Idle = signed out on the server:** the proxy revokes the session and clears cookies on the next
+  request (`/login?reason=idle`; API calls get 401). A "Still there?" card counts down the last 90 s.
+- **Server unreachable = cookies destroyed:** a heartbeat (`/api/session/ping`, every 20 s) — if it fails
+  twice, or the device stays offline for 10 s, the browser deletes the auth cookies and locks the page
+  ("Connection lost… Log in again").
+- The video room keeps the session alive while open, so calls aren't cut off.
+
+## Login protection & rate limits (Upstash Redis)
+
+Audit logs and notifications stay in Postgres (tamper-proof, trigger-written, queryable). Redis holds
+only short-lived counters (`@upstash/redis`, `@upstash/ratelimit`; keys prefixed `ml:`, emails and
+phone numbers hashed):
+
+- **Login lock-out:** 5 wrong passwords for one account (or 20 from one network) within 15 minutes
+  pauses logging in for the rest of the window. The form warns when 2 tries are left. Admins see the
+  pause on the user's page and can **Unlock now**. Logged as `login.locked` / `account.unlock`.
+- **Rate limits (sliding window):** sign-up 5/h per IP · password reset 3/15 min per email and 10/h per
+  IP · SMS verification codes 5/h per number and 10/h per IP · complaints 5/h and replies 30/h per
+  user · public prescription checks 30/min per IP · medicine search 120/min per doctor.
+- **Config:** `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` (also add them in Vercel). If unset or
+  unreachable, limits are skipped (fail open) so an outage never locks everyone out.
+
+## M13 — Admin panel: complaints, analytics, catalogue
+
+- **Complaints (FR-A-05):** patients and doctors file one from **Help & complaints** (or "Report it" on
+  an appointment) — category, optional appointment, subject, details. Each gets a code (e.g.
+  `C261010-4F2A`) and a conversation thread. Max 5 open per user.
+- **Admin** `/admin/complaints`: queue (urgent and oldest first), search by code/subject; detail page
+  with the thread, **reply** or **internal note** (admins only), status (open → in review → resolved /
+  closed, outcome required), priority, the people and appointment involved, and **refund** part or all
+  of the online payment through SSLCommerz (`create_complaint_refund`, capped at what's left).
+  Everyone involved is notified in-app; admin actions go to the audit log.
+- **Analytics (FR-A-07)** `/admin/analytics`: date presets (7 / 30 / 90 days, 12 months) or a custom
+  range (Bangladesh time), loaded as JSON without page reloads. Stat tiles with change vs the previous
+  period (bookings, completed visits, cancellation rate, active doctors, collected online, commission,
+  refunds, sign-ups); line chart of bookings / completed / cancelled with crosshair tooltip and a table
+  view; money collected per day/week/month; top specialties; online vs in-person; who cancelled; top
+  doctors. One DB function (`admin_analytics`) computes it all.
+- **Specialties & lab tests (FR-A-03)** `/admin/catalog`: add, rename, hide specialties (web address is
+  fixed once created); manage the quick-pick lab tests the prescription editor now reads from
+  `lab_tests`.
+- Dashboard shows complaints waiting and links to analytics, audit log and the catalogue.
 
 ## Project layout
 

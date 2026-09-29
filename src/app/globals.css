@@ -380,6 +380,87 @@ html[data-vt="from-auth"]::view-transition-new(site-header) {
 }
 
 /* ---- Reduced motion: keep everything instant ---- */
+/* Top progress bar while a page loads (components/motion/navigation-progress.tsx) */
+.nav-progress-run {
+  animation: nav-progress-run 12s cubic-bezier(0.1, 0.7, 0.2, 1) both;
+}
+.nav-progress-done {
+  animation: nav-progress-done 450ms ease-out both;
+}
+@keyframes nav-progress-run {
+  0% { width: 0; opacity: 1; }
+  8% { width: 45%; }
+  50% { width: 80%; }
+  95% { width: 88%; opacity: 1; }
+  100% { width: 88%; opacity: 0; }
+}
+@keyframes nav-progress-done {
+  0% { width: 70%; opacity: 1; }
+  55% { width: 100%; opacity: 1; }
+  100% { width: 100%; opacity: 0; }
+}
+
+/* Loading skeletons: a soft light sweep */
+.skeleton {
+  background: linear-gradient(100deg, #e2e8f0 30%, #f1f5f9 50%, #e2e8f0 70%);
+  background-size: 300% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes skeleton-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: 0 0; }
+}
+
+/* Scroll reveal (components/motion/reveal.tsx). Hidden only when JS runs. */
+@media (scripting: enabled) {
+  [data-reveal] {
+    transition:
+      opacity 600ms var(--ease-soft),
+      translate 600ms var(--ease-soft);
+  }
+  [data-reveal="hidden"] {
+    opacity: 0;
+    translate: 0 24px;
+  }
+}
+
+/* Sidebar: the active highlight glides to the new item on navigation. */
+::view-transition-group(nav-active) {
+  animation-duration: 320ms;
+  animation-timing-function: var(--ease-soft);
+}
+
+/* Charts (admin analytics): lines draw in, bars grow from their baseline. */
+.chart-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: chart-draw 900ms var(--ease-soft) forwards;
+}
+.chart-grow {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: chart-grow 520ms var(--ease-soft) both;
+}
+.chart-grow-x {
+  transform-origin: left;
+  animation: chart-grow-x 600ms var(--ease-soft) both;
+}
+@keyframes chart-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes chart-grow {
+  from {
+    scale: 1 0;
+  }
+}
+@keyframes chart-grow-x {
+  from {
+    scale: 0 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { isSoundMuted, playChime, setSoundMuted, subscribeSoundMuted, unlockAudioOnGesture } from "@/components/notifications/chime";
-import { loadRecentNotifications, markNotificationsRead } from "@/lib/notifications/actions";
+import { markNotificationsRead, type loadRecentNotifications } from "@/lib/notifications/actions";
+import { backgroundFetch } from "@/lib/auth/background-fetch";
 import { createClient } from "@/lib/supabase/client";
 import type { AppNotification } from "@/types/database";
 
@@ -169,8 +170,8 @@ export function NotificationCenter({
 
   const refresh = useCallback(() => {
     startTransition(async () => {
-      const res = await loadRecentNotifications();
-      if (!res.ok) return;
+      const res = await backgroundFetch<Awaited<ReturnType<typeof loadRecentNotifications>>>("/api/notifications/recent");
+      if (!res?.ok) return;
       const fresh = primed.current ? res.data.items.filter((n) => !n.read_at && !seen.current.has(n.id)) : [];
       res.data.items.forEach((n) => seen.current.add(n.id));
       primed.current = true;

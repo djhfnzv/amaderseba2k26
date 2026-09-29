@@ -189,6 +189,12 @@ export default async function PatientAppointmentPage({ params, searchParams }: P
             <h2 className="mb-4 text-lg font-semibold text-slate-900">History</h2>
             <AppointmentHistory events={events} fallbackZone={zone} />
           </section>
+          <Link
+            href={`/patient/complaints/new?appointment=${appt.id}`}
+            className="text-center text-sm font-medium text-slate-600 hover:text-teal-700 hover:underline"
+          >
+            Problem with this appointment? Report it
+          </Link>
         </aside>
       </div>
     </div>

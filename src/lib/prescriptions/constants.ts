@@ -68,6 +68,14 @@ export const COMMON_TESTS = [
   "Echocardiogram",
 ];
 
+export const LAB_TEST_CATEGORIES: { value: "blood" | "urine_stool" | "imaging" | "cardiac" | "other"; label: string }[] = [
+  { value: "blood", label: "Blood" },
+  { value: "urine_stool", label: "Urine & stool" },
+  { value: "imaging", label: "Imaging" },
+  { value: "cardiac", label: "Heart" },
+  { value: "other", label: "Other" },
+];
+
 export const ADVICE_SUGGESTIONS = [
   "Drink plenty of water.",
   "Take adequate rest.",

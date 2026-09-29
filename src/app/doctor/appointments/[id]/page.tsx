@@ -194,6 +194,12 @@ export default async function DoctorAppointmentPage({ params }: PageProps<"/doct
           <Card title="History">
             <AppointmentHistory events={appt.events} fallbackZone={tz} />
           </Card>
+          <Link
+            href={`/doctor/complaints/new?appointment=${appt.id}`}
+            className="text-center text-sm font-medium text-slate-600 hover:text-teal-700 hover:underline"
+          >
+            Problem with this appointment? Report it
+          </Link>
         </aside>
       </div>
     </div>
