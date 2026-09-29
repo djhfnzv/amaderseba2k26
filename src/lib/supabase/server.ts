@@ -2,6 +2,7 @@ import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies, headers } from "next/headers";
 import { clientInfo } from "@/lib/audit/client-info";
+import { AUTH_COOKIE_OPTIONS } from "@/lib/auth/session";
 import { env } from "@/lib/env";
 import type { Database } from "@/types/database";
 
@@ -23,6 +24,8 @@ export async function createClient() {
 
   return createServerClient<Database>(env.supabaseUrl, env.supabaseKey, {
     global: { headers: auditHeaders },
+    // Auth cookies live 15 minutes, extended by activity (see proxy.ts).
+    cookieOptions: { ...AUTH_COOKIE_OPTIONS, secure: process.env.NODE_ENV === "production" },
     cookies: {
       getAll() {
         return cookieStore.getAll();

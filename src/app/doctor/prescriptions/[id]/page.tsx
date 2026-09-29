@@ -10,7 +10,7 @@ import { requireRole } from "@/lib/auth/guards";
 import { getOrCreateOwnProfile } from "@/lib/doctor/queries";
 import { formatDate, todayIso } from "@/lib/format";
 import { amendPrescription } from "@/lib/prescriptions/actions";
-import { getLastSigned, getPatientSnapshot, getPrescription, listTemplates, listVersions } from "@/lib/prescriptions/queries";
+import { getLastSigned, getPatientSnapshot, getPrescription, listQuickTests, listTemplates, listVersions } from "@/lib/prescriptions/queries";
 import type { TemplatePayload } from "@/lib/prescriptions/schema";
 
 export const metadata: Metadata = { title: "Prescription · MedLife" };
@@ -43,10 +43,11 @@ export default async function DoctorPrescriptionPage({ params, searchParams }: P
   );
 
   if (rx.status === "draft") {
-    const [snapshot, templates, last] = await Promise.all([
+    const [snapshot, templates, last, quickTests] = await Promise.all([
       rx.patient_id ? getPatientSnapshot(rx.patient_id) : Promise.resolve(null),
       listTemplates(user.id),
       rx.patient_id ? getLastSigned(user.id, rx.patient_id, rx.parent_id ?? undefined) : Promise.resolve(null),
+      listQuickTests(),
     ]);
     const lastPayload: TemplatePayload | null = last
       ? {
@@ -91,6 +92,7 @@ export default async function DoctorPrescriptionPage({ params, searchParams }: P
           last={last && lastPayload ? { payload: lastPayload, signedAt: formatDate(last.signed_at) } : null}
           canSign={profile.is_verified}
           todayIso={todayIso()}
+          quickTests={quickTests.length ? quickTests : undefined}
         />
       </div>
     );

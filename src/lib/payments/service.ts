@@ -128,14 +128,17 @@ export async function handleGatewayCallback(
 // -----------------------------------------------------------------------------
 // Refunds
 // -----------------------------------------------------------------------------
-async function sendRefund(ticket: { refund_id: string; amount: number; bank_tran_id: string | null; provider: PaymentProvider; tran_id: string }) {
+async function sendRefund(
+  ticket: { refund_id: string; amount: number; bank_tran_id: string | null; provider: PaymentProvider; tran_id: string },
+  remarks = "MedLife appointment cancelled",
+) {
   const admin = createAdminClient();
   const res = await gatewayFor(ticket.provider).refund({
     bankTranId: ticket.bank_tran_id,
     tranId: ticket.tran_id,
     amount: Number(ticket.amount),
     refundId: ticket.refund_id,
-    remarks: "MedLife appointment cancelled",
+    remarks,
   });
   kickSmsDispatch();
   await admin.rpc("finish_refund", {
@@ -175,4 +178,27 @@ export async function retryRefund(refundId: string): Promise<{ ok: boolean; erro
   if (error || !data?.[0]) return { ok: false, error: error?.message ?? "Could not retry this refund." };
   const ok = await sendRefund(data[0]);
   return ok ? { ok } : { ok, error: "The gateway rejected the refund again. See the error on the refund." };
+}
+
+/**
+ * Refund part/all of a payment while resolving a complaint (M13). The caller
+ * must already have checked that the signed-in user is an admin.
+ */
+export async function refundForComplaint(
+  complaintId: string,
+  amount: number,
+  adminId: string,
+): Promise<{ ok: true; sent: boolean } | { ok: false; error: string }> {
+  const { data, error } = await createAdminClient().rpc("create_complaint_refund", {
+    p_complaint: complaintId,
+    p_amount: amount,
+    p_admin: adminId,
+  });
+  if (error || !data?.[0]) {
+    const readable = error && ["22023", "P0002", "42501"].includes(error.code ?? "");
+    if (error && !readable) console.error("[refundForComplaint]", error.message);
+    return { ok: false, error: readable ? error!.message : "Could not start the refund." };
+  }
+  const sent = await sendRefund(data[0], "MedLife complaint refund");
+  return { ok: true, sent };
 }

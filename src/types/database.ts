@@ -677,6 +677,87 @@ export type RecordAccessRow = {
   total_count: number;
 };
 
+export type LabTestCategory = "blood" | "urine_stool" | "imaging" | "cardiac" | "other";
+
+type LabTestRow = {
+  id: number;
+  name: string;
+  category: LabTestCategory;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+};
+
+export type ComplaintCategory =
+  | "appointment" | "payment" | "doctor_conduct" | "patient_conduct" | "prescription"
+  | "video_call" | "privacy" | "technical" | "other";
+export type ComplaintStatus = "open" | "in_review" | "resolved" | "rejected";
+export type ComplaintPriority = "low" | "normal" | "high" | "urgent";
+
+type ComplaintRow = {
+  id: string;
+  code: string;
+  complainant_id: string;
+  complainant_role: "patient" | "doctor";
+  against_user_id: string | null;
+  appointment_id: string | null;
+  category: ComplaintCategory;
+  subject: string;
+  description: string;
+  status: ComplaintStatus;
+  priority: ComplaintPriority;
+  resolution: string | null;
+  resolved_by: string | null;
+  resolved_at: string | null;
+  refund_id: string | null;
+  refund_amount: number | null;
+  last_activity_at: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type ComplaintMessageRow = {
+  id: string;
+  complaint_id: string;
+  author_id: string | null;
+  author_role: "patient" | "doctor" | "admin" | "system";
+  kind: "message" | "status" | "refund";
+  body: string;
+  is_internal: boolean;
+  created_at: string;
+};
+
+export type AnalyticsDay = {
+  day: string;
+  bookings: number;
+  completed: number;
+  cancelled: number;
+  revenue: number;
+  commission: number;
+  refunds: number;
+};
+
+export type Analytics = {
+  from: string;
+  to: string;
+  series: AnalyticsDay[];
+  bookings: number;
+  visits: {
+    total: number; completed: number; cancelled: number; no_show: number; upcoming: number;
+    by_patient: number; by_doctor: number; by_admin: number; online: number; in_person: number;
+    active_doctors: number; active_patients: number;
+  };
+  money: { gross: number; commission: number; refunds: number; payments: number };
+  people: { new_patients: number; new_doctors: number };
+  complaints: { filed: number; closed: number };
+  verified_doctors: number;
+  top_specialties: { name: string; visits: number; completed: number; revenue: number }[];
+  top_doctors: {
+    id: string; name: string; slug: string; specialty: string | null; visits: number; completed: number;
+    doctor_cancellations: number; revenue: number; rating_avg: number | null; reviews: number;
+  }[];
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -716,8 +797,8 @@ export type Database = {
       };
       specialties: {
         Row: SpecialtyRow;
-        Insert: never;
-        Update: never;
+        Insert: Pick<SpecialtyRow, "slug" | "name"> & Partial<Pick<SpecialtyRow, "description" | "is_active">>;
+        Update: Partial<Pick<SpecialtyRow, "name" | "description" | "is_active">>;
         Relationships: [];
       };
       doctor_profiles: {
@@ -856,6 +937,14 @@ export type Database = {
         Update: never;
         Relationships: [];
       };
+      lab_tests: {
+        Row: LabTestRow;
+        Insert: Pick<LabTestRow, "name"> & Partial<Pick<LabTestRow, "category" | "is_active" | "sort_order">>;
+        Update: Partial<Pick<LabTestRow, "name" | "category" | "is_active" | "sort_order">>;
+        Relationships: [];
+      };
+      complaints: { Row: ComplaintRow; Insert: never; Update: never; Relationships: [] };
+      complaint_messages: { Row: ComplaintMessageRow; Insert: never; Update: never; Relationships: [] };
       verification_events: {
 
         Row: VerificationEventRow;
@@ -944,6 +1033,20 @@ export type Database = {
       };
       queue_review_requests: { Args: Record<string, never>; Returns: number };
       my_record_access: { Args: { p_limit?: number; p_offset?: number }; Returns: RecordAccessRow[] };
+      file_complaint: {
+        Args: { p_category: string; p_subject: string; p_description: string; p_appointment?: string | null };
+        Returns: string;
+      };
+      reply_complaint: { Args: { p_complaint: string; p_body: string; p_internal?: boolean }; Returns: string };
+      admin_update_complaint: {
+        Args: { p_complaint: string; p_status: string; p_priority?: string | null; p_resolution?: string | null };
+        Returns: undefined;
+      };
+      create_complaint_refund: {
+        Args: { p_complaint: string; p_amount: number; p_admin: string };
+        Returns: RefundTicket[];
+      };
+      admin_analytics: { Args: { p_from: string; p_to: string }; Returns: Analytics };
       get_available_slots: {
 
         Args: { p_doctor: string; p_from?: string | null; p_days?: number; p_type?: ConsultationType | null };
@@ -1023,3 +1126,6 @@ export type ReviewReport = ReviewReportRow;
 export type ReviewModerationLog = ReviewModerationLogRow;
 export type DoctorRatingStats = DoctorRatingStatsRow;
 export type AuditLog = AuditLogRow;
+export type LabTest = LabTestRow;
+export type Complaint = ComplaintRow;
+export type ComplaintMessage = ComplaintMessageRow;

@@ -19,6 +19,9 @@ export type NavIcon =
   | "message"
   | "star"
   | "audit"
+  | "support"
+  | "chart"
+  | "tag"
   | "external";
 
 const paths: Record<NavIcon, React.ReactNode> = {
@@ -105,6 +108,20 @@ const paths: Record<NavIcon, React.ReactNode> = {
     <>
       <path d="M8 4.5h8M9 3h6v3H9z" />
       <path d="M6.5 4.5H6a1 1 0 0 0-1 1V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5.5a1 1 0 0 0-1-1h-.5M8.5 11h7M8.5 14.5h4.5M8.5 18h3" />
+    </>
+  ),
+  support: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="12" cy="12" r="3.5" />
+      <path d="m6 6 3.5 3.5M14.5 14.5 18 18M18 6l-3.5 3.5M9.5 14.5 6 18" />
+    </>
+  ),
+  chart: <path d="M4 20h16M7 16.5v-5M11.5 16.5V7M16 16.5v-8" />,
+  tag: (
+    <>
+      <path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7l8.3 8.3a1 1 0 0 1 0 1.4l-7.3 7.3a1 1 0 0 1-1.4 0Z" />
+      <circle cx="8" cy="8" r="1.3" />
     </>
   ),
   external: <path d="M14 4h6v6M20 4l-8.5 8.5M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />,

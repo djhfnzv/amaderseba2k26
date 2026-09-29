@@ -66,6 +66,7 @@ export function PrescriptionEditor({
   last,
   canSign,
   todayIso,
+  quickTests = COMMON_TESTS,
 }: {
   rx: PrescriptionDetail;
   allergies: string[];
@@ -74,6 +75,8 @@ export function PrescriptionEditor({
   last: { payload: TemplatePayload; signedAt: string } | null;
   canSign: boolean;
   todayIso: string;
+  /** Admin-managed quick picks (lab_tests); falls back to the built-in list. */
+  quickTests?: string[];
 }) {
   const router = useRouter();
   const [fields, setFields] = useState<Fields>(() => fieldsOf(rx));
@@ -447,7 +450,7 @@ export function PrescriptionEditor({
         {/* Tests */}
         <Card title={`Investigations (${tests.length})`}>
           <div className="flex flex-wrap gap-1.5">
-            {COMMON_TESTS.map((t) => {
+            {quickTests.map((t) => {
               const on = tests.some((x) => x.name.toLowerCase() === t.toLowerCase());
               return (
                 <button

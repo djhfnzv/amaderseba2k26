@@ -5,7 +5,10 @@ import { LocalTime } from "@/components/ui/local-time";
 import { StatusPill } from "@/components/verification/status-pill";
 import { getUser, listAdminActions, userAppointmentStats } from "@/lib/admin/queries";
 import { requireRole } from "@/lib/auth/guards";
+import { InlineAction } from "@/components/ui/inline-action";
+import { LOGIN_LOCK, accountLockStatus } from "@/lib/security/rate-limit";
 import { createClient } from "@/lib/supabase/server";
+import { unlockLogin } from "../actions";
 import { StatusForm } from "./status-form";
 
 export const metadata: Metadata = { title: "User · Admin · MedLife" };
@@ -17,7 +20,7 @@ export default async function AdminUserPage({ params }: PageProps<"/admin/users/
   if (!user) notFound();
 
   const supabase = await createClient();
-  const [actions, stats, doctor, verification] = await Promise.all([
+  const [actions, stats, doctor, verification, lock] = await Promise.all([
     listAdminActions(user.id),
     userAppointmentStats(user.id),
     user.role === "doctor"
@@ -26,7 +29,9 @@ export default async function AdminUserPage({ params }: PageProps<"/admin/users/
     user.role === "doctor"
       ? supabase.from("verification_requests").select("id, status").eq("doctor_id", user.id).maybeSingle().then((r) => r.data)
       : Promise.resolve(null),
+    accountLockStatus(user.email),
   ]);
+  const locked = !!lock && lock.failures >= LOGIN_LOCK.emailFailures;
   const upcoming = user.role === "doctor" ? stats.asDoctorUpcoming : stats.asPatientUpcoming;
 
   return (
@@ -59,6 +64,21 @@ export default async function AdminUserPage({ params }: PageProps<"/admin/users/
 
       <div className="grid grid-cols-1 gap-6 @4xl:grid-cols-[minmax(0,1fr)_18rem] @5xl:grid-cols-[minmax(0,1fr)_20rem] @5xl:gap-8">
         <div className="flex min-w-0 flex-col gap-6">
+          {lock && lock.failures > 0 && (
+            <div
+              role="status"
+              className={`flex animate-fade-in flex-wrap items-center justify-between gap-3 rounded-2xl border p-4 text-sm ${
+                locked ? "border-red-200 bg-red-50 text-red-900" : "border-amber-200 bg-amber-50 text-amber-900"
+              }`}
+            >
+              <span>
+                {locked ? <strong>Login paused.</strong> : <strong>Failed logins.</strong>} {lock.failures} wrong password
+                {lock.failures === 1 ? "" : "s"} in the last 15 minutes
+                {locked ? ` — unlocks by itself in ${Math.ceil(lock.secondsLeft / 60)} min.` : "."}
+              </span>
+              <InlineAction action={unlockLogin} fields={{ userId: user.id }} label={locked ? "Unlock now" : "Reset counter"} pendingLabel="…" />
+            </div>
+          )}
           <Card title="Account">
             <dl className="grid gap-3 text-sm sm:grid-cols-2">
               <Row label="Email">{user.email ?? "—"}</Row>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, ViewTransition } from "react";
 import { signOut } from "@/app/(auth)/actions";
 import { Logo } from "@/components/landing/logo";
 import { startLogoutSplash } from "@/components/motion/login-splash";
@@ -35,7 +35,7 @@ function isActive(pathname: string, item: NavItem) {
   return item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
-function NavList({ nav, onNavigate }: { nav: NavItem[]; onNavigate?: () => void }) {
+function NavList({ nav, onNavigate, glide }: { nav: NavItem[]; onNavigate?: () => void; glide?: boolean }) {
   const pathname = usePathname();
   return (
     <ul className="flex flex-col gap-1">
@@ -48,13 +48,20 @@ function NavList({ nav, onNavigate }: { nav: NavItem[]; onNavigate?: () => void 
               onClick={onNavigate}
               target={item.external ? "_blank" : undefined}
               aria-current={active ? "page" : undefined}
-              className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                active ? "bg-teal-50 text-teal-800" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+              className={`group relative isolate flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                active ? `text-teal-800 ${glide ? "" : "bg-teal-50"}` : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
               }`}
             >
+              {active && glide && (
+                <ViewTransition name="nav-active">
+                  <span className="absolute inset-0 -z-10 rounded-lg bg-teal-50 shadow-[inset_3px_0_0] shadow-teal-600" aria-hidden="true" />
+                </ViewTransition>
+              )}
               <NavIconSvg
                 name={item.icon}
-                className={`size-5 shrink-0 ${active ? "text-teal-700" : "text-slate-400 group-hover:text-slate-600"}`}
+                className={`size-5 shrink-0 transition-[color,translate] duration-200 ${
+                  active ? "text-teal-700" : "text-slate-400 group-hover:translate-x-0.5 group-hover:text-slate-600"
+                }`}
               />
               <span className="flex-1">{item.label}</span>
               {item.external && <NavIconSvg name="external" className="size-4 text-slate-400" />}
@@ -108,7 +115,7 @@ export function AppSidebar({ nav, userId, homeHref, unread, notificationsHref, u
           <NotificationBell align="left" />
         </div>
         <nav aria-label="Main" className="flex-1 overflow-y-auto px-3 py-4">
-          <NavList nav={nav} />
+          <NavList nav={nav} glide />
         </nav>
         <div className="border-t border-slate-200 p-4">
           <Account userName={userName} roleLabel={roleLabel} />

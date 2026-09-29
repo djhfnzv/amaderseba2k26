@@ -1,4 +1,7 @@
+import { cookies } from "next/headers";
+import { SessionGuard } from "@/components/auth/session-guard";
 import { ROLE_HOME } from "@/lib/auth/roles";
+import { ACTIVITY_COOKIE, SESSION_IDLE_SECONDS } from "@/lib/auth/session";
 import { getUnreadCount } from "@/lib/notifications/queries";
 import type { AppUser, Role } from "@/types/database";
 import { AppSidebar, type NavItem } from "./app-sidebar";
@@ -26,7 +29,9 @@ export async function AppShell({
   nav: NavItem[];
   children: React.ReactNode;
 }) {
-  const unread = await getUnreadCount(user.id);
+  const [unread, jar] = await Promise.all([getUnreadCount(user.id), cookies()]);
+  const seen = Number(jar.get(ACTIVITY_COOKIE)?.value);
+  const expiresAt = Number.isFinite(seen) && seen > 0 ? seen + SESSION_IDLE_SECONDS * 1000 : null;
   return (
     <div className="flex min-h-full flex-1 flex-col bg-slate-50">
       <AppSidebar
@@ -43,6 +48,7 @@ export async function AppShell({
           <div className="mx-auto w-full max-w-6xl">{children}</div>
         </main>
       </div>
+      <SessionGuard initialExpiresAt={expiresAt} />
     </div>
   );
 }

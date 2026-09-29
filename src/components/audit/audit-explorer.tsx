@@ -12,6 +12,7 @@ import {
   shortUserAgent,
 } from "@/lib/audit/constants";
 import { auditUrl, type AuditFilters } from "@/lib/audit/filters";
+import { BACKGROUND_HEADER } from "@/lib/auth/session";
 import type { AuditLog } from "@/types/database";
 
 const LIVE_EVERY_MS = 8000;
@@ -75,7 +76,7 @@ export function AuditExplorer({ initial, initialFilters }: { initial: AuditFeed;
     const timer = setInterval(async () => {
       if (document.hidden || request.current) return;
       try {
-        const res = await fetch(feedUrl({ ...filters, page: 1 }, newestId));
+        const res = await fetch(feedUrl({ ...filters, page: 1 }, newestId), { headers: { [BACKGROUND_HEADER]: "1" } });
         if (!res.ok) return;
         const data = (await res.json()) as AuditFeed;
         if (!data.rows.length) return;

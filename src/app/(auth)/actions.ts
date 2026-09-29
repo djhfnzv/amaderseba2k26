@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { audit } from "@/lib/audit/log";
+import { clearSessionActivity, markSessionActive } from "@/lib/auth/session-server";
+import { clearLoginFailures, loginLocked, rateLimit, recordLoginFailure, requestIp } from "@/lib/security/rate-limit";
 import { env } from "@/lib/env";
 import { ROLE_HOME, isRole, safeNext } from "@/lib/auth/roles";
 import {
@@ -29,6 +31,10 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
     return { fieldErrors: fieldErrorsOf(parsed.error), values: publicValues(raw) };
   }
   const { email, phone, password, fullName, role } = parsed.data;
+  const signupLimit = await rateLimit("signup_ip", await requestIp());
+  if (!signupLimit.ok) {
+    return { error: `Too many sign-ups from this network. Try again in ${signupLimit.retryAfter}.`, values: publicValues(raw) };
+  }
   const admin = createAdminClient();
 
   // One account per mobile number (users.phone is unique).
@@ -79,6 +85,7 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
   if (signInError) {
     redirect("/login");
   }
+  await markSessionActive();
 
   // New patients start the optional profile setup (requirements flow 5.1).
   redirect(role === "patient" ? "/patient/profile?welcome=1" : ROLE_HOME[role]);
@@ -94,11 +101,30 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
     return { fieldErrors: fieldErrorsOf(parsed.error), values: publicValues(raw) };
   }
   const { email, password, next } = parsed.data;
+  const ip = await requestIp();
+
+  const lock = await loginLocked(email, ip);
+  if (lock.locked) {
+    await audit({
+      category: "security",
+      action: "login.locked",
+      targetType: "email",
+      targetId: email.toLowerCase(),
+      metadata: { by: lock.by },
+      success: false,
+      actor: null,
+    });
+    return {
+      error: `Too many failed attempts. For your security, logging in is paused — try again in ${lock.retryAfter} or reset your password.`,
+      values: publicValues(raw),
+    };
+  }
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
+    const left = error.code === "invalid_credentials" ? await recordLoginFailure(email, ip) : null;
     await audit({
       category: "security",
       action: error.code === "user_banned" ? "login.blocked" : "login.failed",
@@ -111,7 +137,11 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
     return {
       error:
         error.code === "invalid_credentials"
-          ? "Incorrect email or password."
+          ? left === 0
+            ? "Incorrect email or password. Logging in is now paused for 15 minutes — or reset your password."
+            : left !== null && left <= 2
+              ? `Incorrect email or password. ${left} ${left === 1 ? "try" : "tries"} left before a 15-minute pause.`
+              : "Incorrect email or password."
           : error.code === "user_banned"
             ? "Your account has been suspended. Please contact support."
             : "Could not log you in. Please try again.",
@@ -144,6 +174,8 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
     return { error: "Your account has been suspended. Please contact support." };
   }
 
+  await clearLoginFailures(email);
+  await markSessionActive();
   await audit({
     category: "security",
     action: "login.success",
@@ -165,6 +197,14 @@ export async function forgotPassword(_prev: FormState, formData: FormData): Prom
   }
 
   const supabase = await createClient();
+  const [byEmail, byIp] = await Promise.all([
+    rateLimit("reset_email", parsed.data.email, { hash: true }),
+    rateLimit("reset_ip", await requestIp()),
+  ]);
+  if (!byEmail.ok || !byIp.ok) {
+    const wait = !byEmail.ok ? byEmail.retryAfter : byIp.ok ? "" : byIp.retryAfter;
+    return { error: `Too many reset requests. Please try again in ${wait}.`, values: publicValues(raw) };
+  }
   await audit({
     category: "security",
     action: "password.reset_request",
@@ -221,5 +261,6 @@ export async function signOut() {
   await audit({ category: "security", action: "logout", targetType: "user" });
   const supabase = await createClient();
   await supabase.auth.signOut();
+  await clearSessionActivity();
   redirect("/login");
 }

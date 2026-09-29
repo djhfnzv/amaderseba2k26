@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { SessionGuard } from "@/components/auth/session-guard";
 import { ConsultRoom } from "@/components/consult/consult-room";
 import { OpensSoon } from "@/components/consult/opens-soon";
 import { Logo } from "@/components/landing/logo";
@@ -155,6 +156,8 @@ export default async function ConsultPage({ params }: PageProps<"/consult/[appoi
         patientPanel={patientPanel}
         doneHref={doneHref}
       />
+      {/* A call can run 30+ minutes without clicks: keep the session alive while the room is open. */}
+      <SessionGuard keepAlive />
     </Shell>
   );
 }

@@ -89,7 +89,7 @@ export async function getDashboardStats() {
   const todayStart = zonedStartOfDay(PLATFORM_TIMEZONE, 0);
   const tomorrowStart = zonedStartOfDay(PLATFORM_TIMEZONE, 1);
 
-  const [patients, doctors, verified, pending, suspended, today, upcoming] = await Promise.all([
+  const [patients, doctors, verified, pending, suspended, today, upcoming, complaints] = await Promise.all([
     supabase.from("users").select("id", head).eq("role", "patient"),
     supabase.from("users").select("id", head).eq("role", "doctor"),
     supabase.from("doctor_profiles").select("user_id", head).eq("is_verified", true),
@@ -106,6 +106,7 @@ export async function getDashboardStats() {
       .select("id", head)
       .gte("slot_start", tomorrowStart)
       .in("status", ["pending_payment", "confirmed"]),
+    supabase.from("complaints").select("id", head).in("status", ["open", "in_review"]),
   ]);
 
   return {
@@ -116,5 +117,6 @@ export async function getDashboardStats() {
     suspended: suspended.count ?? 0,
     appointmentsToday: today.count ?? 0,
     appointmentsUpcoming: upcoming.count ?? 0,
+    openComplaints: complaints.count ?? 0,
   };
 }

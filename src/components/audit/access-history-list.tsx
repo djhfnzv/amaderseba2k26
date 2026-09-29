@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { LocalTime } from "@/components/ui/local-time";
 import { actionLabel } from "@/lib/audit/constants";
+import { BACKGROUND_HEADER } from "@/lib/auth/session";
 import type { RecordAccessRow } from "@/types/database";
 
 type Feed = { rows: RecordAccessRow[]; total: number; page: number; pages: number };
@@ -46,7 +47,7 @@ export function AccessHistoryList({ initial }: { initial: Feed }) {
     const timer = setInterval(async () => {
       if (document.hidden || busy.current) return;
       try {
-        const res = await fetch("/api/patient/access-history?page=1");
+        const res = await fetch("/api/patient/access-history?page=1", { headers: { [BACKGROUND_HEADER]: "1" } });
         if (!res.ok) return;
         const data = (await res.json()) as Feed;
         const added = data.rows.filter((r) => !newest || r.occurred_at > newest);

@@ -8,13 +8,16 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
       user={user}
       nav={[
         { href: "/admin", label: "Dashboard", icon: "home", exact: true },
+        { href: "/admin/analytics", label: "Analytics", icon: "chart" },
         { href: "/admin/verifications", label: "Verifications", icon: "shield" },
         { href: "/admin/users", label: "Users", icon: "users" },
+        { href: "/admin/complaints", label: "Complaints", icon: "support" },
         { href: "/admin/payments", label: "Payments", icon: "wallet" },
         { href: "/admin/payouts", label: "Payouts", icon: "banknote" },
         { href: "/admin/prescriptions", label: "Prescriptions", icon: "rx" },
         { href: "/admin/reviews", label: "Reviews", icon: "star" },
         { href: "/admin/medicines", label: "Medicines", icon: "pill" },
+        { href: "/admin/catalog", label: "Specialties & tests", icon: "tag" },
         { href: "/admin/sms", label: "SMS log", icon: "message" },
         { href: "/admin/audit", label: "Audit log", icon: "audit" },
         { href: "/admin/settings", label: "Settings", icon: "cog" },
