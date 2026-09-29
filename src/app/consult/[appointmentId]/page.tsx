@@ -5,6 +5,7 @@ import { ConsultRoom } from "@/components/consult/consult-room";
 import { OpensSoon } from "@/components/consult/opens-soon";
 import { Logo } from "@/components/landing/logo";
 import { LocalTime } from "@/components/ui/local-time";
+import { audit } from "@/lib/audit/log";
 import { requireUser } from "@/lib/auth/guards";
 import { getIceServers } from "@/lib/consult/ice";
 import { ageFromDob, formatDate } from "@/lib/format";
@@ -44,6 +45,16 @@ export default async function ConsultPage({ params }: PageProps<"/consult/[appoi
     .eq("id", appointmentId)
     .single();
   if (!appt) notFound();
+  if (room.role === "doctor") {
+    await audit({
+      category: "medical",
+      action: "health_profile.view",
+      targetType: "appointment",
+      targetId: appointmentId,
+      patientId: appt.patient_id,
+      metadata: { via: "consultation" },
+    });
+  }
 
   const [{ data: doctor }, { data: patient }] = await Promise.all([
     supabase.from("doctor_profiles").select("display_name, timezone").eq("user_id", appt.doctor_id).maybeSingle(),

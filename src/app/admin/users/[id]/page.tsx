@@ -45,6 +45,16 @@ export default async function AdminUserPage({ params }: PageProps<"/admin/users/
         >
           {user.status === "active" ? "Active" : "Suspended"}
         </span>
+        <span className="flex gap-3 text-sm font-medium sm:ml-auto">
+          <Link href={`/admin/audit?actor=${user.id}`} className="text-teal-700 hover:underline">
+            Activity log
+          </Link>
+          {user.role === "patient" && (
+            <Link href={`/admin/audit?patient=${user.id}`} className="text-teal-700 hover:underline">
+              Who accessed their data
+            </Link>
+          )}
+        </span>
       </div>
 
       <div className="grid grid-cols-1 gap-6 @4xl:grid-cols-[minmax(0,1fr)_18rem] @5xl:grid-cols-[minmax(0,1fr)_20rem] @5xl:gap-8">

@@ -1,6 +1,7 @@
 import "server-only";
 import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { clientInfo } from "@/lib/audit/client-info";
 import { env } from "@/lib/env";
 import type { Database } from "@/types/database";
 
@@ -8,7 +9,20 @@ import type { Database } from "@/types/database";
 export async function createClient() {
   const cookieStore = await cookies();
 
+  // The visitor's IP/browser go along so audit triggers can record them (M14).
+  let auditHeaders: Record<string, string> = {};
+  try {
+    const { ip, userAgent } = clientInfo(await headers());
+    auditHeaders = {
+      ...(ip ? { "x-medlife-ip": ip } : {}),
+      ...(userAgent ? { "x-medlife-ua": userAgent } : {}),
+    };
+  } catch {
+    // Outside a request (e.g. inside after() in a Server Component).
+  }
+
   return createServerClient<Database>(env.supabaseUrl, env.supabaseKey, {
+    global: { headers: auditHeaders },
     cookies: {
       getAll() {
         return cookieStore.getAll();

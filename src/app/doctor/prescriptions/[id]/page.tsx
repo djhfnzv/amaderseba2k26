@@ -5,6 +5,7 @@ import { PrescriptionEditor } from "@/components/prescriptions/prescription-edit
 import { PrescriptionStatusPill, PrescriptionView } from "@/components/prescriptions/prescription-view";
 import { Alert } from "@/components/ui/alert";
 import { LocalTime } from "@/components/ui/local-time";
+import { audit } from "@/lib/audit/log";
 import { requireRole } from "@/lib/auth/guards";
 import { getOrCreateOwnProfile } from "@/lib/doctor/queries";
 import { formatDate, todayIso } from "@/lib/format";
@@ -22,6 +23,14 @@ export default async function DoctorPrescriptionPage({ params, searchParams }: P
   const sp = await searchParams;
   const rx = UUID.test(id) ? await getPrescription(id) : null;
   if (!rx || rx.doctor_id !== user.id) notFound();
+  await audit({
+    category: "prescription",
+    action: "prescription.view",
+    targetType: "prescription",
+    targetId: rx.id,
+    patientId: rx.patient_id,
+    metadata: { via: "doctor", status: rx.status },
+  });
   const profile = await getOrCreateOwnProfile(user);
 
   const back = (

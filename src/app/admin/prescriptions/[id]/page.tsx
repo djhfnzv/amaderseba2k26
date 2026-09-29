@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PrescriptionStatusPill, PrescriptionView } from "@/components/prescriptions/prescription-view";
+import { audit } from "@/lib/audit/log";
 import { requireRole } from "@/lib/auth/guards";
 import { getPrescription } from "@/lib/prescriptions/queries";
 
@@ -14,6 +15,14 @@ export default async function AdminPrescriptionPage({ params }: PageProps<"/admi
   const { id } = await params;
   const rx = UUID.test(id) ? await getPrescription(id) : null;
   if (!rx || rx.status === "draft") notFound();
+  await audit({
+    category: "prescription",
+    action: "prescription.view",
+    targetType: "prescription",
+    targetId: rx.id,
+    patientId: rx.patient_id,
+    metadata: { via: "admin", status: rx.status },
+  });
 
   return (
     <div className="flex flex-col gap-6">
